@@ -1,15 +1,13 @@
-import Contador from './components/Contador';
-import ListaUsuarios from './components/ListaUsuarios';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Contador />} />
-        <Route path="/lista" element={<ListaUsuarios />} />
-      </Routes>
-    </>
+    <Routes>
+      {/* Redirige la raíz "/" al dashboard */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+    </Routes>
   );
 }
 

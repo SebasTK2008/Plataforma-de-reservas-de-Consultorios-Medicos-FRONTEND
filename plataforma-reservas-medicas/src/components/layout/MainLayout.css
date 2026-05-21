@@ -1,0 +1,20 @@
+/* ===== LAYOUT PRINCIPAL ===== */
+.layout {
+  display: flex;       /* Sidebar e izquierda en fila */
+  min-height: 100vh;
+}
+
+.layout__main {
+  /* Empieza donde termina el sidebar */
+  margin-left: var(--sidebar-width);
+  flex: 1;             /* Ocupa todo el espacio restante */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;        /* Evita overflow en contenido largo */
+}
+
+.layout__content {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+}
