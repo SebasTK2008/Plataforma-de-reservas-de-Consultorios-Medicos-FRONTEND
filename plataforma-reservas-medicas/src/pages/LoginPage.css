@@ -1,0 +1,310 @@
+/* ===== LOGIN PAGE ===== */
+
+/* Contenedor principal — dos columnas en pantalla completa */
+.login {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+/* =============================================
+   PANEL IZQUIERDO — Identidad institucional
+   ============================================= */
+.login__panel {
+  /* Ocupa el 45% del ancho en pantallas grandes */
+  width: 45%;
+  background-color: var(--color-primary);
+  position: relative;    /* Para posicionar las decoraciones */
+  overflow: hidden;      /* Oculta los círculos que salen del panel */
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+
+  /* Solo visible en pantallas de 768px o más */
+  display: none;
+}
+
+/* Mostramos el panel en pantallas medianas y grandes */
+@media (min-width: 768px) {
+  .login__panel {
+    display: flex;
+  }
+  .login__form-panel {
+    flex: 1;   /* Ocupa el resto del espacio */
+  }
+}
+
+/* --- Logo dentro del panel --- */
+.login__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-2xl);
+  position: relative;  /* Aparece por encima de las decoraciones */
+  z-index: 2;
+}
+
+.login__logo-icon {
+  width: 52px;
+  height: 52px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.login__logo-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-light);
+  letter-spacing: 2px;
+}
+
+/* --- Contenido central del panel --- */
+.login__panel-content {
+  flex: 1;              /* Empuja el footer hacia abajo */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.login__panel-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-text-light);
+  line-height: 1.25;
+  margin-bottom: var(--spacing-md);
+}
+
+.login__panel-subtitle {
+  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.7;
+  margin-bottom: var(--spacing-xl);
+  max-width: 340px;
+}
+
+/* --- Lista de características --- */
+.login__features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.login__feature {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: rgba(255, 255, 255, 0.90);
+  font-size: var(--text-sm);
+}
+
+/* El punto verde antes de cada característica */
+.login__feature-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-secondary);
+  flex-shrink: 0;   /* Que no se encoja */
+}
+
+/* --- Círculos decorativos del fondo --- */
+/* Son elementos visuales sin contenido semántico */
+.login__panel-decoration {
+  position: absolute;
+  inset: 0;          /* Cubre todo el panel */
+  z-index: 1;
+  pointer-events: none;   /* No bloquean clics */
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: var(--radius-full);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Círculo grande arriba a la derecha */
+.decoration-circle--1 {
+  width: 350px;
+  height: 350px;
+  top: -80px;
+  right: -100px;
+}
+
+/* Círculo mediano abajo a la izquierda */
+.decoration-circle--2 {
+  width: 250px;
+  height: 250px;
+  bottom: 40px;
+  left: -60px;
+}
+
+/* Círculo pequeño en el medio */
+.decoration-circle--3 {
+  width: 150px;
+  height: 150px;
+  top: 45%;
+  right: 30px;
+}
+
+/* =============================================
+   PANEL DERECHO — Formulario
+   ============================================= */
+.login__form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+/* Caja blanca del formulario */
+.login__form-container {
+  width: 100%;
+  max-width: 420px;   /* No crece demasiado en pantallas anchas */
+}
+
+/* --- Encabezado del formulario --- */
+.login__form-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.login__form-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.login__form-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* --- Formulario --- */
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);   /* Espacio entre campos */
+}
+
+/* --- Grupo de campo (label + input) --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);   /* Espacio pequeño entre label e input */
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+}
+
+.form-input {
+  height: 48px;
+  padding: 0 var(--spacing-md);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+/* Cuando el input está activo (el usuario hace clic) */
+.form-input:focus {
+  border-color: var(--color-primary);
+  /* Anillo azul sutil alrededor del input activo */
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.form-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+/* --- Input de contraseña necesita espacio para el botón del ojo --- */
+.form-input-wrapper {
+  position: relative;   /* Para posicionar el botón dentro */
+}
+
+/* El padding derecho evita que el texto tape el botón del ojo */
+.form-input--password {
+  padding-right: 48px;
+}
+
+.form-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);  /* Centrado vertical perfecto */
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease;
+}
+
+.form-password-toggle:hover {
+  color: var(--color-primary);
+}
+
+/* --- Botón de envío --- */
+.login__submit-btn {
+  height: 52px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: var(--spacing-xs);
+  letter-spacing: 0.3px;
+}
+
+.login__submit-btn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Efecto de presionar el botón */
+.login__submit-btn:active {
+  transform: scale(0.98);
+}
+
+/* --- Pie del formulario --- */
+.login__footer-text {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-lg);
+}
+
+.login__footer-text a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.login__footer-text a:hover {
+  text-decoration: underline;
+}

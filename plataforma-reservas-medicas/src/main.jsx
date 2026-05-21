@@ -1,11 +1,19 @@
-import React    from 'react'
+// main.jsx — El punto de entrada de toda la app
+import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'  
+import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'  // ← IMPORTAR
 import App from './App.jsx'
-
+import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>   
-    <App />
-  </BrowserRouter>
+  <React.StrictMode>
+    <BrowserRouter>
+      {/* AuthProvider envuelve TODO
+          Así cualquier componente en la app puede usar useAuth() */}
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
 )

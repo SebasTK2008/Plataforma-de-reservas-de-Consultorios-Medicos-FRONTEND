@@ -30,12 +30,11 @@ function Sidebar() {
       {/* LOGO */}
       <div className="sidebar__logo">
         <div className="sidebar__logo-icon">
-          {/* Cruz médica hecha con CSS puro */}
-          <span className="logo-cross" />
+          <Stethoscope size={32} color="white" />
         </div>
         <div className="sidebar__logo-text">
-          <span className="logo-name">RUMP</span>
-          <span className="logo-subtitle">Consultorios Médicos</span>
+          <span className="logo-name">UMARS</span>
+          <span className="logo-subtitle">Plataforma de Reservas Médicas</span>
         </div>
       </div>
 
