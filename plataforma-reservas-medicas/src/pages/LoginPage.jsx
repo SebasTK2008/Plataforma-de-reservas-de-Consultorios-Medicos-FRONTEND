@@ -1,59 +1,113 @@
-// LoginPage.jsx — Pantalla de inicio de sesión
-// Por ahora solo es visual, sin lógica de conexión al backend
+// LoginPage.jsx — Con conexión real al backend
 import { useState } from 'react';
-import { Eye, EyeOff, Stethoscope } from 'lucide-react';
-import './LoginPage.css';
+import { Eye, EyeOff, Stethoscope, AlertCircle, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { loginRequest } from '../api/authApi';
+import './LoginPage.css';
 
 function LoginPage() {
 
-    const navigate = useNavigate();  // Para redirigir después del login
-    const { login } = useAuth();  
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // useState nos permite guardar valores que cambian en pantalla
-  // passwordVisible controla si la contraseña se ve o se oculta
+  // ── Estados del formulario ──────────────────
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // formData guarda lo que el usuario escribe en los inputs
   const [formData, setFormData] = useState({
     documentNumber: '',
     password: ''
   });
 
-  // Esta función se llama cada vez que el usuario escribe en un input
-  // "e" es el evento del navegador — contiene info sobre qué cambió
+  // Estado de carga: true mientras esperamos respuesta del backend
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Mensaje de error para mostrar al usuario
+  // null = sin error, string = hay un error
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  // ── Manejadores ─────────────────────────────
+
   function handleChange(e) {
-    // e.target.name  → el atributo name del input que cambió
-    // e.target.value → el texto que escribió el usuario
     setFormData({
-      ...formData,           // Copia todo lo que ya había en formData
-      [e.target.name]: e.target.value  // Reemplaza solo el campo que cambió
+      ...formData,
+      [e.target.name]: e.target.value
     });
+    // Borramos el error cuando el usuario empieza a escribir
+    // Para no tener el mensaje de error mientras corrige
+    if (errorMessage) setErrorMessage(null);
   }
 
-  // Esta función se llama cuando el usuario envía el formulario
-function handleSubmit(e) {
-  e.preventDefault();
+  // async/await: le decimos que esta función hará operaciones
+  // que toman tiempo (llamar al backend)
+  async function handleSubmit(e) {
+    e.preventDefault();
 
-  // Por ahora simulamos un login exitoso con un token falso
-  // En el SIGUIENTE paso aquí irá la llamada real al backend
-  const tokenSimulado = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.firma';
+    // Activamos el estado de carga
+    // El botón mostrará un spinner y se deshabilitará
+    setIsLoading(true);
+    setErrorMessage(null);
 
-  // Guardamos el token en el AuthContext
-  login(tokenSimulado);
+    // try/catch: intentamos hacer el login
+    // Si algo falla, el catch captura el error
+    try {
 
-  // Redirigimos al dashboard
-  navigate('/dashboard');
-}
+      // Llamamos al backend con los datos del formulario
+      // "await" pausa aquí hasta que el backend responda
+      const response = await loginRequest({
+        documentNumber: formData.documentNumber,
+        password: formData.password
+      });
+
+      // Si llegamos aquí, el login fue exitoso
+      // response.accessToken tiene el JWT que devolvió el backend
+      login(response.accessToken);
+
+      // Redirigimos al dashboard
+      navigate('/dashboard');
+
+    } catch (error) {
+      // El backend respondió con error, o no hubo conexión
+
+      // error.response existe cuando el backend respondió
+      // (ej: 401 credenciales incorrectas, 400 datos inválidos)
+      if (error.response) {
+
+        const status = error.response.status;
+
+        if (status === 401 || status === 403) {
+          setErrorMessage('Número de documento o contraseña incorrectos.');
+        } else if (status === 400) {
+          setErrorMessage('Datos inválidos. Verifica la información ingresada.');
+        } else {
+          setErrorMessage('Error en el servidor. Intenta más tarde.');
+        }
+
+      } else if (error.request) {
+        // error.request existe cuando la petición salió pero
+        // no hubo respuesta — el backend no está corriendo
+        setErrorMessage(
+          'No se pudo conectar con el servidor. ' +
+          'Verifica que el backend esté en ejecución.'
+        );
+      } else {
+        setErrorMessage('Ocurrió un error inesperado.');
+      }
+
+    } finally {
+      // finally se ejecuta SIEMPRE, haya error o no
+      // Desactivamos el estado de carga
+      setIsLoading(false);
+    }
+  }
+
+  // ── Render ──────────────────────────────────
 
   return (
     <div className="login">
 
-      {/* ===== PANEL IZQUIERDO — Identidad institucional ===== */}
+      {/* Panel izquierdo */}
       <div className="login__panel">
-
-        {/* Logo */}
         <div className="login__logo">
           <div className="login__logo-icon">
             <Stethoscope size={32} color="white" />
@@ -61,7 +115,6 @@ function handleSubmit(e) {
           <span className="login__logo-name">UMARS</span>
         </div>
 
-        {/* Texto institucional */}
         <div className="login__panel-content">
           <h2 className="login__panel-title">
             Sistema de Gestión de<br />Consultorios Médicos
@@ -71,7 +124,6 @@ function handleSubmit(e) {
             pacientes y profesionales de la salud universitaria.
           </p>
 
-          {/* Tarjetas de características */}
           <div className="login__features">
             <div className="login__feature">
               <span className="login__feature-dot" />
@@ -88,20 +140,17 @@ function handleSubmit(e) {
           </div>
         </div>
 
-        {/* Decoración del fondo del panel */}
         <div className="login__panel-decoration" aria-hidden="true">
           <div className="decoration-circle decoration-circle--1" />
           <div className="decoration-circle decoration-circle--2" />
           <div className="decoration-circle decoration-circle--3" />
         </div>
-
       </div>
 
-      {/* ===== PANEL DERECHO — Formulario ===== */}
+      {/* Panel derecho — Formulario */}
       <div className="login__form-panel">
         <div className="login__form-container">
 
-          {/* Encabezado del formulario */}
           <div className="login__form-header">
             <h1 className="login__form-title">Iniciar Sesión</h1>
             <p className="login__form-subtitle">
@@ -109,12 +158,18 @@ function handleSubmit(e) {
             </p>
           </div>
 
-          {/* Formulario */}
-          {/* onSubmit llama a handleSubmit cuando el usuario presiona Enter
-              o hace clic en el botón de tipo "submit" */}
+          {/* ── Alerta de error ── */}
+          {/* Solo se renderiza si errorMessage tiene valor */}
+          {errorMessage && (
+            <div className="login__error">
+              <AlertCircle size={18} />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <form className="login__form" onSubmit={handleSubmit}>
 
-            {/* Campo: Número de documento */}
+            {/* Campo documento */}
             <div className="form-group">
               <label className="form-label" htmlFor="documentNumber">
                 Número de Documento
@@ -128,56 +183,58 @@ function handleSubmit(e) {
                 value={formData.documentNumber}
                 onChange={handleChange}
                 autoComplete="username"
+                // Deshabilitamos mientras carga para evitar cambios
+                disabled={isLoading}
                 required
               />
             </div>
 
-            {/* Campo: Contraseña */}
+            {/* Campo contraseña */}
             <div className="form-group">
               <label className="form-label" htmlFor="password">
                 Contraseña
               </label>
-
-              {/* Contenedor relativo para posicionar el botón del ojo */}
               <div className="form-input-wrapper">
                 <input
                   className="form-input form-input--password"
                   id="password"
                   name="password"
-                  // El tipo cambia dinámicamente según passwordVisible
                   type={passwordVisible ? 'text' : 'password'}
                   placeholder="Tu contraseña"
                   value={formData.password}
                   onChange={handleChange}
                   autoComplete="current-password"
+                  disabled={isLoading}
                   required
                 />
-                {/* Botón para mostrar/ocultar contraseña */}
                 <button
                   type="button"
                   className="form-password-toggle"
-                  // Cada clic invierte el valor de passwordVisible
                   onClick={() => setPasswordVisible(!passwordVisible)}
-                  // Título para accesibilidad (tooltip al hover)
-                  title={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  disabled={isLoading}
+                  title={passwordVisible ? 'Ocultar' : 'Mostrar'}
                 >
-                  {/* Muestra un ícono distinto según el estado */}
-                  {passwordVisible
-                    ? <EyeOff size={18} />
-                    : <Eye size={18} />
-                  }
+                  {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            {/* Botón de envío */}
-            <button type="submit" className="login__submit-btn">
-              Ingresar al Sistema
+            {/* Botón submit */}
+            {/* Se deshabilita mientras carga para evitar doble envío */}
+            <button
+              type="submit"
+              className="login__submit-btn"
+              disabled={isLoading}
+            >
+              {/* Mostramos spinner o texto según el estado */}
+              {isLoading
+                ? <><Loader size={18} className="spin" /> Verificando...</>
+                : 'Ingresar al Sistema'
+              }
             </button>
 
           </form>
 
-          {/* Pie del formulario */}
           <p className="login__footer-text">
             ¿Problemas para acceder? Contacta al
             <a href="mailto:soporte@umars.edu.co"> administrador del sistema</a>
