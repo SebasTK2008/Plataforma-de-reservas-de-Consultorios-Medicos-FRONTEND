@@ -1,6 +1,6 @@
 // TopBar.jsx — La barra superior con info del usuario
 import { Bell, Search } from 'lucide-react';
-import './TopBar.css';
+import './Topbar.css';
 
 function TopBar({ pageTitle }) {
   return (

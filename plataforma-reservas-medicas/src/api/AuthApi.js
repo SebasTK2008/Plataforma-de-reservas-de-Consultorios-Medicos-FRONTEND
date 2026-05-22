@@ -1,7 +1,6 @@
 // authApi.js
 // Todas las llamadas HTTP relacionadas con autenticación
 // van aquí centralizadas.
-
 import api from './axiosConfig';
 
 // ─────────────────────────────────────────

@@ -1,12 +1,17 @@
-import MainLayout from "../components/layout/MainLayout";
+// src/pages/PatientsPage.jsx
+import MainLayout from '../components/layout/MainLayout';
+import UnderConstruction from './UnderConstruction';
 
 function PatientsPage() {
-    return (
-        <MainLayout pageTitle="Pacientes">
-            <h2>Gestión de Pacientes</h2>
-            <p>Aquí puedes gestionar la información de los pacientes, incluyendo su historial médico, citas programadas y más.</p>
-        </MainLayout>
-    )
+  return (
+    <MainLayout pageTitle="Pacientes">
+      <UnderConstruction
+        title="Gestión de Pacientes"
+        description="Aquí podrás registrar, buscar y gestionar 
+                     la información de todos los pacientes."
+      />
+    </MainLayout>
+  );
 }
 
 export default PatientsPage;
