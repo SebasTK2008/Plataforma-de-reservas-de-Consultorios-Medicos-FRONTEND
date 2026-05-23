@@ -1,120 +1,105 @@
-// usePatients.js
-// Hook personalizado que maneja todo el estado relacionado con pacientes.
-// Cualquier componente que necesite datos de pacientes usa este hook.
-
 import { useState, useEffect, useCallback } from 'react';
 import { getPatients, createPatient, updatePatient } from '../api/patientsApi';
 
-
-// ────────────────────────────────────────────────
-// ANATOMÍA DE UN CUSTOM HOOK:
-//
-// 1. El nombre SIEMPRE empieza con "use" (regla de React)
-// 2. Puede usar otros hooks de React (useState, useEffect, etc.)
-// 3. Devuelve datos y funciones que el componente necesita
-// 4. Se comporta como cualquier función de JavaScript
-// ────────────────────────────────────────────────
-
 export function usePatients() {
 
-  // ── Estado interno del hook ──────────────────────────
-  const [patients, setPatients] = useState([]);     // Lista de pacientes
-  const [loading, setLoading] = useState(true);     // ¿Estamos cargando?
-  const [error, setError] = useState(null);         // Mensaje de error o null
-  const [totalPages, setTotalPages] = useState(0);  // Total de páginas (para paginación)
-  const [totalElements, setTotalElements] = useState(0); // Total de registros
-  const [currentPage, setCurrentPage] = useState(0);    // Página actual
-  const [searchQuery, setSearchQuery] = useState('');   // Texto de búsqueda
+  // ── Datos ────────────────────────────────────────────────
+  const [patients,       setPatients]       = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(null);
 
+  // ── Paginación ───────────────────────────────────────────
+  const [totalPages,     setTotalPages]     = useState(0);
+  const [totalElements,  setTotalElements]  = useState(0);
+  const [currentPage,    setCurrentPage]    = useState(0);
 
-  // ── Función para cargar pacientes ──────────────────────
-  // useCallback memoriza la función para que no se recree en cada render.
-  // Sin useCallback, React crearía una función nueva cada vez que el
-  // componente se renderice, causando renders infinitos en useEffect.
+  // ── Carga de datos ───────────────────────────────────────
+  // useCallback evita que se recree la función en cada render.
+  // Solo se recrea cuando cambia currentPage.
   const fetchPatients = useCallback(async () => {
     try {
-      setLoading(true);  // Activamos el indicador de carga
-      setError(null);    // Limpiamos errores anteriores
+      setLoading(true);
+      setError(null);
 
       const data = await getPatients(currentPage, 10);
 
-      // Spring Boot Page devuelve esta estructura:
-      // {
-      //   content: [...pacientes],
-      //   totalPages: 3,
-      //   totalElements: 28,
-      //   number: 0,        ← página actual
-      //   size: 10,         ← tamaño de página
-      //   first: true,      ← ¿es la primera página?
-      //   last: false       ← ¿es la última página?
-      // }
-      setPatients(data.content || []);
-      setTotalPages(data.totalPages || 0);
-      setTotalElements(data.totalElements || 0);
+      setPatients(data.content       ?? []);
+      setTotalPages(data.totalPages  ?? 0);
+      setTotalElements(data.totalElements ?? 0);
 
     } catch (err) {
-      // err.response existe si el backend respondió con un código de error
-      // err.message siempre existe (es el mensaje del error de JavaScript)
-      const message = err.response?.data?.message || err.message || 'Error al cargar pacientes';
-      setError(message);
+      // err.response?.data?.message → mensaje del GlobalExceptionHandler del backend
+      // err.message                 → error genérico de red o JavaScript
+      setError(
+        err.response?.data?.message ??
+        err.message ??
+        'Error al cargar los pacientes'
+      );
     } finally {
-      // finally se ejecuta SIEMPRE, tanto si hubo error como si no
       setLoading(false);
     }
-  }, [currentPage]); // ← Este hook se recrea cuando currentPage cambia
+  }, [currentPage]);
 
-
-  // ── Efecto: cargar pacientes cuando cambia la página ──
-  // useEffect ejecuta código cuando el componente "monta" o cuando
-  // cambian las dependencias listadas en el array final.
+  // Se ejecuta al montar y cada vez que currentPage cambia
   useEffect(() => {
     fetchPatients();
-  }, [fetchPatients]); // ← Se ejecuta cuando fetchPatients cambia
+  }, [fetchPatients]);
 
 
-  // ── Crear paciente ────────────────────────────────────
-  const addPatient = async (patientData) => {
+  // ── Crear paciente ────────────────────────────────────────
+  const addPatient = async (formData) => {
     try {
-      // No necesitamos setLoading aquí porque es una acción puntual
-      // (el modal tendrá su propio estado de loading)
-      const newPatient = await createPatient(patientData);
-      // Recargamos la lista para ver el nuevo paciente
+      await createPatient({
+        fullName:       formData.fullName.trim(),
+        email:          formData.email.trim(),
+        phoneNumber:    formData.phoneNumber.trim(),
+        documentNumber: formData.documentNumber.trim(),
+        // studentCode es opcional: solo lo enviamos si tiene valor
+        ...(formData.studentCode?.trim()
+          ? { studentCode: formData.studentCode.trim() }
+          : {}),
+      });
       await fetchPatients();
-      return { success: true, data: newPatient };
+      return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Error al crear paciente';
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: err.response?.data?.message ?? 'Error al crear el paciente',
+      };
     }
   };
 
 
-  // ── Actualizar paciente ───────────────────────────────
-  const editPatient = async (id, patientData) => {
+  // ── Editar paciente (incluye cambio de estado) ────────────
+  const editPatient = async (id, formData) => {
     try {
-      const updated = await updatePatient(id, patientData);
-      await fetchPatients(); // Recargamos la lista
-      return { success: true, data: updated };
+      await updatePatient(id, {
+        fullName:    formData.fullName?.trim()    || undefined,
+        email:       formData.email?.trim()       || undefined,
+        phoneNumber: formData.phoneNumber?.trim() || undefined,
+        status:      formData.status              || undefined,
+      });
+      await fetchPatients();
+      return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Error al actualizar paciente';
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: err.response?.data?.message ?? 'Error al actualizar el paciente',
+      };
     }
   };
 
 
-  // ── Lo que devolvemos al componente ───────────────────
-  // Todo lo que un componente podría necesitar está aquí
   return {
-    patients,         // Array con los pacientes de la página actual
-    loading,          // Boolean: true mientras carga
-    error,            // String con el error, o null
-    totalPages,       // Para los botones de paginación
-    totalElements,    // Para mostrar "Mostrando X de Y pacientes"
-    currentPage,      // Página actual (0-based)
-    setCurrentPage,   // Función para cambiar de página
-    searchQuery,      // Texto de búsqueda actual
-    setSearchQuery,   // Función para cambiar el texto de búsqueda
-    addPatient,       // Función para crear
-    editPatient,      // Función para editar
-    refetch: fetchPatients  // Por si el componente quiere recargar manualmente
+    patients,
+    loading,
+    error,
+    totalPages,
+    totalElements,
+    currentPage,
+    setCurrentPage,
+    addPatient,
+    editPatient,
+    refetch: fetchPatients,
   };
 }

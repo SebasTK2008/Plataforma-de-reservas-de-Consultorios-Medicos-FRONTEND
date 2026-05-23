@@ -1,114 +1,100 @@
-// PatientsPage.jsx
-// Página completa de gestión de pacientes.
-// Incluye: listado paginado, búsqueda, crear y editar.
-
 import { useState } from 'react';
 import {
   Plus, Search, Edit2, User,
-  ChevronLeft, ChevronRight, AlertCircle, X, Save, Loader
+  ChevronLeft, ChevronRight,
+  AlertCircle, X, Save, Loader,
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { usePatients } from '../hooks/usePatients';
 import './PatientsPage.css';
 
 
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // COMPONENTE: PatientStatusBadge
-// Badge de color según el estado del paciente
-// ─────────────────────────────────────────────────────────
+// Muestra el estado del paciente con color semántico.
+// ─────────────────────────────────────────────────────────────
 function PatientStatusBadge({ status }) {
-  const config = {
-    ACTIVE:    { label: 'Activo',    className: 'badge badge--green' },
-    INACTIVE:  { label: 'Inactivo',  className: 'badge badge--gray' },
-    SUSPENDED: { label: 'Suspendido', className: 'badge badge--red' },
+  const MAP = {
+    ACTIVE:    { label: 'Activo',     cls: 'badge--green'  },
+    SUSPENDED: { label: 'Suspendido', cls: 'badge--orange' },
+    INACTIVE:  { label: 'Inactivo',   cls: 'badge--gray'   },
   };
-  const { label, className } = config[status] || { label: status, className: 'badge badge--gray' };
-  return <span className={className}>{label}</span>;
+  const { label, cls } = MAP[status] ?? { label: status, cls: 'badge--gray' };
+  return <span className={`badge ${cls}`}>{label}</span>;
 }
 
 
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // COMPONENTE: PatientModal
-// Modal para crear o editar un paciente.
-// Se muestra sobre el resto del contenido.
-// ─────────────────────────────────────────────────────────
-// Props:
-// - isOpen: boolean que controla si el modal se muestra
-// - onClose: función para cerrar el modal
-// - onSubmit: función que recibe los datos del formulario
-// - patient: si viene con datos, es modo "editar"; si es null, es modo "crear"
-// ─────────────────────────────────────────────────────────
+// Modal unificado para CREAR y EDITAR pacientes.
+//
+// Modo crear (patient = null):
+//   Campos: fullName, email, phoneNumber, documentNumber, studentCode
+//
+// Modo editar (patient = objeto):
+//   Campos: fullName, email, phoneNumber, status
+//   (documentNumber y studentCode son de solo lectura)
+// ─────────────────────────────────────────────────────────────
 function PatientModal({ isOpen, onClose, onSubmit, patient }) {
 
-  // Estado del formulario
-  // Si estamos editando, pre-llenamos con los datos del paciente
-  const [formData, setFormData] = useState({
-    fullName:       patient?.fullName       || '',
-    email:          patient?.email          || '',
-    phoneNumber:    patient?.phoneNumber    || '',
-    documentNumber: patient?.documentNumber || '',
-    studentCode:    patient?.studentCode    || '',
+  const isEditing = patient !== null && patient !== undefined;
+
+  // Pre-llenamos el formulario con los datos del paciente si estamos editando
+  const [form, setForm] = useState({
+    fullName:       patient?.fullName       ?? '',
+    email:          patient?.email          ?? '',
+    phoneNumber:    patient?.phoneNumber    ?? '',
+    documentNumber: patient?.documentNumber ?? '',
+    studentCode:    patient?.studentCode    ?? '',
+    status:         patient?.status         ?? 'ACTIVE',
   });
 
-  const [saving, setSaving] = useState(false);  // ¿Estamos guardando?
-  const [error, setError] = useState(null);     // Error del formulario
+  const [saving,  setSaving]  = useState(false);
+  const [error,   setError]   = useState(null);
 
-  // Si el modal no está abierto, no renderizamos nada
-  // Esto es más eficiente que usar CSS para ocultar el modal
   if (!isOpen) return null;
 
-
-  // Manejador de cambios en los inputs
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,                    // Copiamos el estado anterior
-      [e.target.name]: e.target.value  // Actualizamos solo el campo que cambió
-      // La sintaxis [e.target.name] es "computed property name":
-      // Si name="email", esto es equivalente a { email: e.target.value }
-    }));
-    if (error) setError(null);  // Limpiamos el error al escribir
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (error) setError(null);
   };
 
-
-  // Manejador del envío del formulario
   const handleSubmit = async (e) => {
-    e.preventDefault();  // Prevenir el comportamiento por defecto del formulario (reload de página)
+    e.preventDefault();
 
-    // Validación básica en el frontend
-    if (!formData.fullName.trim()) return setError('El nombre es requerido');
-    if (!formData.email.trim()) return setError('El email es requerido');
-    if (!formData.phoneNumber.trim()) return setError('El teléfono es requerido');
-    if (!patient && !formData.documentNumber.trim()) return setError('El documento es requerido');
+    // Validaciones básicas del lado del cliente
+    if (!form.fullName.trim())    return setError('El nombre completo es requerido.');
+    if (!form.email.trim())       return setError('El correo electrónico es requerido.');
+    if (!form.phoneNumber.trim()) return setError('El número de teléfono es requerido.');
+    if (!isEditing && !form.documentNumber.trim())
+      return setError('El número de documento es requerido.');
 
     setSaving(true);
-    // Llamamos a onSubmit (que viene del componente padre PatientsPage)
-    // Esto retorna { success, error }
-    const result = await onSubmit(formData);
+    const result = await onSubmit(form);
 
     if (result.success) {
-      onClose();  // Cerramos el modal si todo salió bien
+      onClose();
     } else {
-      setError(result.error);  // Mostramos el error del backend
+      setError(result.error);
       setSaving(false);
     }
   };
 
-  const isEditing = !!patient;  // !! convierte a boolean: null → false, objeto → true
-
-
-  // El modal usa un "portal" conceptual: se renderiza encima de todo
   return (
-    // Fondo oscuro (overlay) — al hacer clic, cierra el modal
+    // Overlay: clic fuera cierra el modal
     <div className="modal-overlay" onClick={onClose}>
-
-      {/* Contenido del modal — stopPropagation evita que el clic
-          se "propague" al overlay y cierre el modal accidentalmente */}
+      {/* stopPropagation: evita que el clic dentro cierre el modal */}
       <div className="modal" onClick={e => e.stopPropagation()}>
 
         {/* Encabezado */}
         <div className="modal__header">
           <h3>{isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}</h3>
-          <button className="modal__close" onClick={onClose} type="button">
+          <button
+            type="button"
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+          >
             <X size={20} />
           </button>
         </div>
@@ -117,68 +103,67 @@ function PatientModal({ isOpen, onClose, onSubmit, patient }) {
         {error && (
           <div className="modal__error">
             <AlertCircle size={16} />
-            {error}
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="modal__form">
-
-          {/* Grid de dos columnas para los campos */}
           <div className="form-grid">
 
-            <div className="form-group">
-              <label htmlFor="fullName">Nombre Completo *</label>
+            {/* ── Nombre completo ─── */}
+            <div className="form-group form-group--full">
+              <label htmlFor="m-fullName">Nombre Completo *</label>
               <input
-                id="fullName"
+                id="m-fullName"
                 name="fullName"
                 type="text"
                 placeholder="Ej: Juan Pérez García"
-                value={formData.fullName}
+                value={form.fullName}
                 onChange={handleChange}
                 disabled={saving}
                 maxLength={100}
               />
             </div>
 
+            {/* ── Email ─── */}
             <div className="form-group">
-              <label htmlFor="email">Correo Electrónico *</label>
+              <label htmlFor="m-email">Correo Electrónico *</label>
               <input
-                id="email"
+                id="m-email"
                 name="email"
                 type="email"
-                placeholder="juan@correo.com"
-                value={formData.email}
+                placeholder="correo@ejemplo.com"
+                value={form.email}
                 onChange={handleChange}
                 disabled={saving}
               />
             </div>
 
+            {/* ── Teléfono ─── */}
             <div className="form-group">
-              <label htmlFor="phoneNumber">Teléfono *</label>
+              <label htmlFor="m-phone">Teléfono *</label>
               <input
-                id="phoneNumber"
+                id="m-phone"
                 name="phoneNumber"
                 type="tel"
                 placeholder="Ej: 3001234567"
-                value={formData.phoneNumber}
+                value={form.phoneNumber}
                 onChange={handleChange}
                 disabled={saving}
                 maxLength={20}
               />
             </div>
 
-            {/* El documento solo se puede establecer al crear, no al editar.
-                Esto refleja la regla de negocio del backend. */}
+            {/* ── Documento (solo en modo CREAR) ─── */}
             {!isEditing && (
               <div className="form-group">
-                <label htmlFor="documentNumber">Número de Documento *</label>
+                <label htmlFor="m-doc">Número de Documento *</label>
                 <input
-                  id="documentNumber"
+                  id="m-doc"
                   name="documentNumber"
                   type="text"
-                  placeholder="Ej: 1234567890"
-                  value={formData.documentNumber}
+                  placeholder="Ej: 1001234567"
+                  value={form.documentNumber}
                   onChange={handleChange}
                   disabled={saving}
                   maxLength={50}
@@ -186,27 +171,78 @@ function PatientModal({ isOpen, onClose, onSubmit, patient }) {
               </div>
             )}
 
-            <div className="form-group">
-              <label htmlFor="studentCode">Código Estudiantil</label>
-              <input
-                id="studentCode"
-                name="studentCode"
-                type="text"
-                placeholder="Ej: 2024114220 (opcional)"
-                value={formData.studentCode}
-                onChange={handleChange}
-                disabled={saving || isEditing}  // No se puede editar tampoco
-                maxLength={50}
-              />
-            </div>
+            {/* ── Código estudiantil (solo en modo CREAR) ─── */}
+            {!isEditing && (
+              <div className="form-group">
+                <label htmlFor="m-student">
+                  Código Estudiantil
+                  <span className="label-optional">(opcional)</span>
+                </label>
+                <input
+                  id="m-student"
+                  name="studentCode"
+                  type="text"
+                  placeholder="Ej: 2024114220"
+                  value={form.studentCode}
+                  onChange={handleChange}
+                  disabled={saving}
+                  maxLength={50}
+                />
+              </div>
+            )}
+
+            {/* ── Estado (solo en modo EDITAR) ─── */}
+            {isEditing && (
+              <div className="form-group">
+                <label htmlFor="m-status">Estado del Paciente</label>
+                <select
+                  id="m-status"
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  disabled={saving}
+                  className="form-select"
+                >
+                  <option value="ACTIVE">Activo</option>
+                  <option value="SUSPENDED">Suspendido</option>
+                  <option value="INACTIVE">Inactivo</option>
+                </select>
+                {/* Explicación contextual del estado seleccionado */}
+                <p className="form-hint">
+                  {form.status === 'ACTIVE'    && 'El paciente puede agendar citas normalmente.'}
+                  {form.status === 'SUSPENDED' && 'El paciente no puede agendar citas temporalmente.'}
+                  {form.status === 'INACTIVE'  && 'El paciente está dado de baja del sistema.'}
+                </p>
+              </div>
+            )}
+
+            {/* ── Campos de solo lectura en modo EDITAR ─── */}
+            {isEditing && (
+              <>
+                <div className="form-group">
+                  <label>Documento</label>
+                  <div className="form-readonly">
+                    {patient.documentNumber ?? '—'}
+                  </div>
+                  <p className="form-hint">El documento no puede modificarse.</p>
+                </div>
+                <div className="form-group">
+                  <label>Código Estudiantil</label>
+                  <div className="form-readonly">
+                    {patient.studentCode ?? '—'}
+                  </div>
+                  <p className="form-hint">El código no puede modificarse.</p>
+                </div>
+              </>
+            )}
 
           </div>
 
-          {/* Botones del footer */}
+          {/* Footer del modal */}
           <div className="modal__footer">
             <button
               type="button"
-              className="btn btn--secondary"
+              className="btn btn--ghost"
               onClick={onClose}
               disabled={saving}
             >
@@ -220,24 +256,46 @@ function PatientModal({ isOpen, onClose, onSubmit, patient }) {
               {saving ? (
                 <><Loader size={16} className="spin" /> Guardando...</>
               ) : (
-                <><Save size={16} /> {isEditing ? 'Guardar Cambios' : 'Crear Paciente'}</>
+                <><Save size={16} /> {isEditing ? 'Guardar cambios' : 'Crear paciente'}</>
               )}
             </button>
           </div>
-
         </form>
+
       </div>
     </div>
   );
 }
 
 
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// COMPONENTE: LoadingSkeleton
+// Filas animadas mientras se cargan los datos.
+// ─────────────────────────────────────────────────────────────
+function LoadingSkeleton() {
+  return (
+    <div className="skeleton-table">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="skeleton-row">
+          <div className="sk sk--avatar" />
+          <div className="sk sk--name" />
+          <div className="sk sk--md" />
+          <div className="sk sk--md" />
+          <div className="sk sk--sm" />
+          <div className="sk sk--badge" />
+          <div className="sk sk--action" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+// ─────────────────────────────────────────────────────────────
 // COMPONENTE PRINCIPAL: PatientsPage
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 function PatientsPage() {
 
-  // Usamos nuestro custom hook que maneja toda la lógica de datos
   const {
     patients,
     loading,
@@ -246,53 +304,20 @@ function PatientsPage() {
     totalElements,
     currentPage,
     setCurrentPage,
-    searchQuery,
-    setSearchQuery,
     addPatient,
     editPatient,
   } = usePatients();
 
-  // Estado del modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState(null); // null = crear, objeto = editar
+  // ── Estado del modal ──────────────────────────────────────
+  const [modalOpen,       setModalOpen]       = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
+  // ── Estado de la búsqueda local ───────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Abrir modal para CREAR un paciente nuevo
-  const handleOpenCreate = () => {
-    setSelectedPatient(null);  // Limpiamos para modo "crear"
-    setModalOpen(true);
-  };
-
-  // Abrir modal para EDITAR un paciente existente
-  const handleOpenEdit = (patient) => {
-    setSelectedPatient(patient);  // Pasamos el paciente para pre-llenar el form
-    setModalOpen(true);
-  };
-
-  // Cerrar el modal
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedPatient(null);
-  };
-
-  // Función que se llama cuando el modal envía el formulario
-  const handleModalSubmit = async (formData) => {
-    if (selectedPatient) {
-      // Modo editar: solo enviamos los campos editables
-      return await editPatient(selectedPatient.id, {
-        fullName:    formData.fullName,
-        email:       formData.email,
-        phoneNumber: formData.phoneNumber,
-      });
-    } else {
-      // Modo crear: enviamos todos los campos
-      return await addPatient(formData);
-    }
-  };
-
-
-  // ── Filtrado de pacientes por búsqueda ────────────────
-  // Filtramos en el cliente (los datos ya cargados)
+  // ── Filtrado local sobre la página actual ─────────────────
+  // Filtramos los N registros ya cargados.
+  // Es correcto para N pequeño (10-20 registros por página).
   const filteredPatients = searchQuery.trim()
     ? patients.filter(p => {
         const q = searchQuery.toLowerCase();
@@ -304,31 +329,58 @@ function PatientsPage() {
       })
     : patients;
 
+  // ── Abrir modal en modo CREAR ─────────────────────────────
+  const openCreate = () => {
+    setSelectedPatient(null);
+    setModalOpen(true);
+  };
 
-  // ── Render ────────────────────────────────────────────
+  // ── Abrir modal en modo EDITAR ────────────────────────────
+  const openEdit = (patient) => {
+    setSelectedPatient(patient);
+    setModalOpen(true);
+  };
+
+  // ── Cerrar modal ──────────────────────────────────────────
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedPatient(null);
+  };
+
+  // ── Envío del modal (crea o edita según el modo) ──────────
+  const handleModalSubmit = async (formData) => {
+    if (selectedPatient) {
+      return await editPatient(selectedPatient.id, formData);
+    }
+    return await addPatient(formData);
+  };
+
+
   return (
     <MainLayout pageTitle="Pacientes">
       <div className="patients-page">
 
-        {/* ─── ENCABEZADO ─────────────────────────────── */}
+        {/* ─── ENCABEZADO ─────────────────────────────────── */}
         <div className="page-header">
           <div>
             <h2 className="page-header__title">Gestión de Pacientes</h2>
             <p className="page-header__subtitle">
-              {loading ? 'Cargando...' : `${totalElements} pacientes registrados`}
+              {loading
+                ? 'Cargando...'
+                : `${totalElements} paciente${totalElements !== 1 ? 's' : ''} registrado${totalElements !== 1 ? 's' : ''}`
+              }
             </p>
           </div>
-
-          <button className="btn btn--primary" onClick={handleOpenCreate}>
+          <button className="btn btn--primary" onClick={openCreate}>
             <Plus size={18} />
             Nuevo Paciente
           </button>
         </div>
 
 
-        {/* ─── BARRA DE BÚSQUEDA ──────────────────────── */}
+        {/* ─── BÚSQUEDA ────────────────────────────────────── */}
         <div className="search-bar">
-          <Search size={18} className="search-bar__icon" />
+          <Search size={17} className="search-bar__icon" />
           <input
             type="text"
             placeholder="Buscar por nombre, email o documento..."
@@ -336,12 +388,11 @@ function PatientsPage() {
             onChange={e => setSearchQuery(e.target.value)}
             className="search-bar__input"
           />
-          {/* Botón para limpiar la búsqueda */}
           {searchQuery && (
             <button
               className="search-bar__clear"
               onClick={() => setSearchQuery('')}
-              title="Limpiar búsqueda"
+              aria-label="Limpiar búsqueda"
             >
               <X size={16} />
             </button>
@@ -349,53 +400,44 @@ function PatientsPage() {
         </div>
 
 
-        {/* ─── MENSAJE DE ERROR ───────────────────────── */}
+        {/* ─── ERROR ───────────────────────────────────────── */}
         {error && (
-          <div className="page-error">
-            <AlertCircle size={20} />
-            <p>{error}</p>
+          <div className="alert alert--error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
           </div>
         )}
 
 
-        {/* ─── TABLA DE PACIENTES ─────────────────────── */}
-        <div className="patients-table-card">
-
+        {/* ─── TABLA ───────────────────────────────────────── */}
+        <div className="table-card">
           {loading ? (
-            // Estado de carga
-            <div className="table-loading">
-              {[1,2,3,4,5,6,7,8].map(i => (
-                <div key={i} className="table-loading__row">
-                  <div className="table-loading__cell table-loading__cell--wide" />
-                  <div className="table-loading__cell" />
-                  <div className="table-loading__cell" />
-                  <div className="table-loading__cell--small" />
-                  <div className="table-loading__cell--small" />
-                </div>
-              ))}
-            </div>
+            <LoadingSkeleton />
 
           ) : filteredPatients.length === 0 ? (
-            // Estado vacío
             <div className="empty-state">
-              <User size={48} />
-              <h3>No se encontraron pacientes</h3>
+              <div className="empty-state__icon">
+                <User size={40} />
+              </div>
+              <h3>
+                {searchQuery
+                  ? `Sin resultados para "${searchQuery}"`
+                  : 'No hay pacientes registrados'}
+              </h3>
               <p>
                 {searchQuery
-                  ? `No hay resultados para "${searchQuery}"`
-                  : 'Comienza creando el primer paciente'
-                }
+                  ? 'Intenta con otro nombre, email o documento.'
+                  : 'Comienza registrando el primer paciente del sistema.'}
               </p>
               {!searchQuery && (
-                <button className="btn btn--primary" onClick={handleOpenCreate}>
+                <button className="btn btn--primary" onClick={openCreate}>
                   <Plus size={16} />
-                  Crear Primer Paciente
+                  Registrar primer paciente
                 </button>
               )}
             </div>
 
           ) : (
-            // Tabla con datos
             <div className="table-wrapper">
               <table className="data-table">
                 <thead>
@@ -412,38 +454,50 @@ function PatientsPage() {
                   {filteredPatients.map(patient => (
                     <tr key={patient.id}>
 
-                      {/* Columna: Avatar + Nombre + Email */}
+                      {/* Avatar + nombre + email */}
                       <td>
-                        <div className="patient-info">
-                          <div className="patient-info__avatar">
-                            {patient.fullName?.charAt(0).toUpperCase() || '?'}
+                        <div className="patient-cell">
+                          <div className="patient-cell__avatar">
+                            {patient.fullName?.charAt(0).toUpperCase() ?? '?'}
                           </div>
-                          <div>
-                            <p className="patient-info__name">{patient.fullName}</p>
-                            <p className="patient-info__email">{patient.email}</p>
+                          <div className="patient-cell__info">
+                            <span className="patient-cell__name">
+                              {patient.fullName}
+                            </span>
+                            <span className="patient-cell__email">
+                              {patient.email}
+                            </span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="text-secondary">{patient.documentNumber}</td>
-                      <td className="text-secondary">{patient.phoneNumber}</td>
-                      <td className="text-secondary">{patient.studentCode || '—'}</td>
+                      {/* Documento — requiere que el backend incluya el campo */}
+                      <td className="td--muted">
+                        {patient.documentNumber ?? '—'}
+                      </td>
+
+                      <td className="td--muted">
+                        {patient.phoneNumber ?? '—'}
+                      </td>
+
+                      {/* Código estudiantil */}
+                      <td className="td--muted">
+                        {patient.studentCode ?? '—'}
+                      </td>
 
                       <td>
                         <PatientStatusBadge status={patient.status} />
                       </td>
 
-                      {/* Acciones */}
                       <td>
-                        <div className="table-actions">
-                          <button
-                            className="action-btn action-btn--edit"
-                            onClick={() => handleOpenEdit(patient)}
-                            title="Editar paciente"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                        </div>
+                        <button
+                          className="action-btn"
+                          onClick={() => openEdit(patient)}
+                          title="Editar paciente"
+                          aria-label={`Editar ${patient.fullName}`}
+                        >
+                          <Edit2 size={15} />
+                        </button>
                       </td>
 
                     </tr>
@@ -452,12 +506,10 @@ function PatientsPage() {
               </table>
             </div>
           )}
-
         </div>
 
 
-        {/* ─── PAGINACIÓN ─────────────────────────────── */}
-        {/* Solo mostramos la paginación si hay más de 1 página */}
+        {/* ─── PAGINACIÓN ──────────────────────────────────── */}
         {!loading && totalPages > 1 && (
           <div className="pagination">
             <span className="pagination__info">
@@ -469,50 +521,38 @@ function PatientsPage() {
                 className="pagination__btn"
                 onClick={() => setCurrentPage(p => p - 1)}
                 disabled={currentPage === 0}
+                aria-label="Página anterior"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={17} />
               </button>
 
-              {/* Botones de número de página */}
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                // Calculamos qué páginas mostrar alrededor de la actual
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i;
-                } else if (currentPage < 3) {
-                  pageNum = i;
-                } else if (currentPage > totalPages - 3) {
-                  pageNum = totalPages - 5 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    className={`pagination__btn ${currentPage === pageNum ? 'pagination__btn--active' : ''}`}
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum + 1}
-                  </button>
-                );
-              })}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`pagination__btn ${currentPage === i ? 'pagination__btn--active' : ''}`}
+                  onClick={() => setCurrentPage(i)}
+                >
+                  {i + 1}
+                </button>
+              ))}
 
               <button
                 className="pagination__btn"
                 onClick={() => setCurrentPage(p => p + 1)}
                 disabled={currentPage === totalPages - 1}
+                aria-label="Página siguiente"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={17} />
               </button>
             </div>
           </div>
         )}
 
 
-        {/* ─── MODAL ──────────────────────────────────── */}
+        {/* ─── MODAL ───────────────────────────────────────── */}
         <PatientModal
           isOpen={modalOpen}
-          onClose={handleCloseModal}
+          onClose={closeModal}
           onSubmit={handleModalSubmit}
           patient={selectedPatient}
         />

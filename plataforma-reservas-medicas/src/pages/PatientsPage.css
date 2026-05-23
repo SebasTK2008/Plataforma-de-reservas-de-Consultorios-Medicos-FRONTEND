@@ -1,25 +1,91 @@
-/* PatientsPage.css */
+/* ══════════════════════════════════════════════════════════
+   ESTILOS COMPARTIDOS (botones, badges, tabla)
+   Idealmente estos irían en src/index.css.
+   Por practicidad académica los definimos aquí.
+   ══════════════════════════════════════════════════════════ */
 
-/* ── Contenedor principal ────────────────────────────── */
+/* ── Botones ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.18s ease, opacity 0.18s ease,
+              transform 0.1s ease;
+  white-space: nowrap;
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled              { opacity: 0.55; cursor: not-allowed; }
+
+.btn--primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border);
+}
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+/* ── Badges de estado ────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge--green  { background: #dcfce7; color: #15803d; }
+.badge--orange { background: #ffedd5; color: #c2410c; }
+.badge--gray   { background: #f3f4f6; color: #374151; }
+
+/* ── Animación de spinner ────────────────────────────────── */
+.spin {
+  animation: spin-anim 0.9s linear infinite;
+}
+@keyframes spin-anim {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   PÁGINA DE PACIENTES
+   ══════════════════════════════════════════════════════════ */
+
 .patients-page {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
 }
 
-
-/* ── Encabezado de página ───────────────────────────── */
+/* ── Encabezado de página ────────────────────────────────── */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--spacing-md);
 }
 
 .page-header__title {
   font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 4px 0;
+  margin: 0 0 4px;
 }
 
 .page-header__subtitle {
@@ -28,22 +94,7 @@
   margin: 0;
 }
 
-
-/* ── Error de página ────────────────────────────────── */
-.page-error {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-md);
-  color: var(--color-error);
-  font-size: var(--text-sm);
-}
-
-
-/* ── Barra de búsqueda ──────────────────────────────── */
+/* ── Barra de búsqueda ───────────────────────────────────── */
 .search-bar {
   display: flex;
   align-items: center;
@@ -51,53 +102,60 @@
   background-color: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  transition: border-color 0.2s;
+  padding: 10px var(--spacing-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .search-bar:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
-
 .search-bar__icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
-
 .search-bar__input {
   flex: 1;
   border: none;
   background: none;
   outline: none;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--color-text-primary);
+  min-width: 0;
 }
-
-.search-bar__input::placeholder {
-  color: var(--color-text-secondary);
-}
-
+.search-bar__input::placeholder { color: var(--color-text-secondary); }
 .search-bar__clear {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary);
   display: flex;
-  align-items: center;
   padding: 2px;
   border-radius: var(--radius-sm);
+  transition: color 0.15s, background-color 0.15s;
 }
-
 .search-bar__clear:hover {
   color: var(--color-error);
   background-color: #fef2f2;
 }
 
+/* ── Alerta de error ─────────────────────────────────────── */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+.alert--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--color-error);
+}
 
-/* ── Tarjeta de la tabla ────────────────────────────── */
-.patients-table-card {
+/* ── Tarjeta de tabla ────────────────────────────────────── */
+.table-card {
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
@@ -105,261 +163,342 @@
   overflow: hidden;
 }
 
+.table-wrapper { overflow-x: auto; }
 
-/* ── Skeleton de carga de tabla ─────────────────────── */
-.table-loading {
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+/* ── Tabla de datos ──────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
 }
-
-.table-loading__row {
-  display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
+.data-table th {
+  padding: 10px var(--spacing-md);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
-  align-items: center;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 12px var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td      { background-color: #f8faff; }
+
+.td--muted {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
 }
 
-.table-loading__cell,
-.table-loading__cell--wide,
-.table-loading__cell--small {
-  height: 20px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-sm);
-}
-
-.table-loading__cell       { width: 120px; }
-.table-loading__cell--wide { flex: 1; }
-.table-loading__cell--small { width: 80px; }
-
-
-/* ── Información del paciente en la tabla ───────────── */
-.patient-info {
+/* ── Celda de paciente (avatar + nombre + email) ─────────── */
+.patient-cell {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }
-
-.patient-info__avatar {
-  width: 36px;
-  height: 36px;
+.patient-cell__avatar {
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
   background-color: var(--color-primary);
-  color: white;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: var(--text-sm);
   flex-shrink: 0;
+  font-family: var(--font-heading);
 }
-
-.patient-info__name {
+.patient-cell__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.patient-cell__name {
   font-weight: 500;
   color: var(--color-text-primary);
-  margin: 0;
-  font-size: var(--text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-.patient-info__email {
+.patient-cell__email {
   font-size: var(--text-xs);
   color: var(--color-text-secondary);
-  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.text-secondary {
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-}
-
-
-/* ── Botones de acción en la tabla ──────────────────── */
-.table-actions {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
+/* ── Botón de acción (editar) ────────────────────────────── */
 .action-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
-  border: none;
+  border: 1.5px solid #dbeafe;
+  background-color: #eff6ff;
+  color: #2563eb;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.action-btn:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* ── Skeleton de carga ───────────────────────────────────── */
+.skeleton-table {
+  padding: var(--spacing-sm) 0;
+}
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 12px var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+.skeleton-row:last-child { border-bottom: none; }
+
+/* Animación shimmer compartida para todas las celdas */
+.sk {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 25%,
+    var(--color-bg)     50%,
+    var(--color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  flex-shrink: 0;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sk--avatar  { width: 38px; height: 38px; border-radius: 50%; }
+.sk--name    { flex: 1;     height: 16px; }
+.sk--md      { width: 110px; height: 14px; }
+.sk--sm      { width: 80px;  height: 14px; }
+.sk--badge   { width: 64px;  height: 22px; border-radius: 9999px; }
+.sk--action  { width: 32px;  height: 32px; }
+
+/* ── Estado vacío ────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  gap: var(--spacing-sm);
+  text-align: center;
+}
+.empty-state__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  margin-bottom: var(--spacing-sm);
+}
+.empty-state h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.empty-state p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-md);
 }
 
-.action-btn--edit {
-  background-color: #eff6ff;
-  color: #2563eb;
-}
-.action-btn--edit:hover {
-  background-color: #2563eb;
-  color: white;
-}
-
-
-/* ── Paginación ─────────────────────────────────────── */
+/* ── Paginación ──────────────────────────────────────────── */
 .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
-
 .pagination__info {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
-
 .pagination__controls {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
 }
-
 .pagination__btn {
-  width: 36px;
+  min-width: 36px;
   height: 36px;
+  padding: 0 8px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   font-size: var(--text-sm);
   font-weight: 500;
+  font-family: var(--font-body);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
 }
-
 .pagination__btn:hover:not(:disabled) {
   border-color: var(--color-primary);
   color: var(--color-primary);
   background-color: var(--color-primary-light);
 }
-
 .pagination__btn--active {
   background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: white !important;
+  border-color:     var(--color-primary) !important;
+  color:            #ffffff              !important;
 }
-
-.pagination__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.pagination__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 
-/* ── Modal ──────────────────────────────────────────── */
-/* El overlay oscuro cubre toda la pantalla */
+/* ══════════════════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════════════════ */
+
+/* Overlay oscuro sobre toda la pantalla */
 .modal-overlay {
-  position: fixed;        /* Posición fija respecto a la ventana */
-  inset: 0;               /* top:0, right:0, bottom:0, left:0 */
-  background-color: rgba(0, 0, 0, 0.5);  /* Negro semitransparente */
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;          /* Por encima de todo */
+  z-index: 1000;
   padding: var(--spacing-md);
-  animation: fadeIn 0.2s ease;  /* Aparece suavemente */
+  animation: overlay-in 0.18s ease;
 }
-
-@keyframes fadeIn {
+@keyframes overlay-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
+/* Caja del modal */
 .modal {
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   width: 100%;
-  max-width: 560px;
+  max-width: 580px;
   max-height: 90vh;
   overflow-y: auto;
-  animation: slideUp 0.25s ease;  /* Sube desde abajo */
+  animation: modal-up 0.22s ease;
 }
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
+@keyframes modal-up {
+  from { transform: translateY(16px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* Encabezado del modal */
 .modal__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background-color: var(--color-surface);
+  z-index: 1;
 }
-
 .modal__header h3 {
   margin: 0;
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
-
 .modal__close {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
-  padding: 4px;
   display: flex;
-  transition: all 0.15s;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background-color 0.15s;
 }
-
 .modal__close:hover {
   color: var(--color-error);
   background-color: #fef2f2;
 }
 
+/* Error dentro del modal */
 .modal__error {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   margin: var(--spacing-md) var(--spacing-lg) 0;
   padding: var(--spacing-sm) var(--spacing-md);
-  background-color: #fef2f2;
+  background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: var(--text-sm);
 }
 
+/* Cuerpo del modal */
 .modal__form {
   padding: var(--spacing-lg);
 }
 
-/* Grid de 2 columnas para los campos del formulario */
+/* Grid de dos columnas para los campos */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;  /* Dos columnas iguales */
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
-/* Los inputs del modal */
-.modal__form .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Un campo que ocupa las dos columnas */
+.form-group--full {
+  grid-column: 1 / -1;
 }
 
-.modal__form label {
+/* Grupo de campo (label + input) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form-group label {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-text-primary);
 }
+.label-optional {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin-left: 6px;
+}
 
-.modal__form input {
+/* Inputs del modal */
+.modal__form input,
+.form-select {
   height: 42px;
   padding: 0 var(--spacing-sm);
   border: 1.5px solid var(--color-border);
@@ -369,31 +508,65 @@
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-.modal__form input:focus {
+.modal__form input:focus,
+.form-select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
-
-.modal__form input:disabled {
+.modal__form input:disabled,
+.form-select:disabled {
   background-color: var(--color-bg);
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
+/* Select de estado */
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c6370' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 36px;
+}
+
+/* Campo de solo lectura */
+.form-readonly {
+  height: 42px;
+  padding: 0 var(--spacing-sm);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  cursor: not-allowed;
+}
+
+/* Pista contextual debajo de un campo */
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+/* Footer del modal */
 .modal__footer {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--color-border);
+  margin-top: var(--spacing-xs);
 }
 
-/* En pantallas pequeñas, el grid del modal pasa a una columna */
-@media (max-width: 500px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+/* Responsive: una columna en pantallas pequeñas */
+@media (max-width: 520px) {
+  .form-grid { grid-template-columns: 1fr; }
 }
