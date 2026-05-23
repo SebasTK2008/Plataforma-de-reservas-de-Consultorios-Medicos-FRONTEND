@@ -6,7 +6,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 
 // Importamos useAuth para acceder a la función logout
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../Hooks/useAuth';
 import './Sidebar.css';
 
 const NAV_ITEMS = [

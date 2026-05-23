@@ -5,7 +5,7 @@ import {
   AlertCircle, X, Save, Loader,
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
-import { usePatients } from '../hooks/usePatients';
+import { usePatients } from '../Hooks/usePatients';
 import './PatientsPage.css';
 
 
