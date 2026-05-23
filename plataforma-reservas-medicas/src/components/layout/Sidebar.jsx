@@ -41,8 +41,12 @@ function Sidebar() {
 
       {/* LOGO */}
       <div className="sidebar__logo">
-        <div className="sidebar__logo-icon">
-          <Stethoscope size={32} color="white" />
+        <div className="sidebar__logo-image-container">
+          <img 
+            src="/icon_sidebar.png" 
+            alt="Logo UMARS" 
+            className="sidebar__logo-image"
+          />
         </div>
         <div className="sidebar__logo-text">
           <span className="logo-name">UMARS</span>

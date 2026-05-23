@@ -22,7 +22,7 @@ function App() {
     <Routes>
 
       {/* ── RUTA PÚBLICA ─────────────────────── */}
-      <Route path="/dashboard" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
 
       {/* ── RUTAS PRIVADAS ───────────────────── */}
       {/* Cada ruta está envuelta en PrivateRoute  */}
