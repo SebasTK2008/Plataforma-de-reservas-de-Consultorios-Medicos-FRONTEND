@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, User,
   ChevronLeft, ChevronRight,
@@ -52,6 +52,22 @@ function PatientModal({ isOpen, onClose, onSubmit, patient }) {
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState(null);
 
+  // Sincroniza el estado del formulario cuando cambia la prop `patient`.
+  // Esto asegura que al abrir el modal en modo EDITAR los campos se
+  // pre-llenen correctamente incluso si el componente ya estaba montado.
+  useEffect(() => {
+    setForm({
+      fullName:       patient?.fullName       ?? '',
+      email:          patient?.email          ?? '',
+      phoneNumber:    patient?.phoneNumber    ?? '',
+      documentNumber: patient?.documentNumber ?? '',
+      studentCode:    patient?.studentCode    ?? '',
+      status:         patient?.status         ?? 'ACTIVE',
+    });
+    setError(null);
+    setSaving(false);
+  }, [patient]);
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -70,12 +86,16 @@ function PatientModal({ isOpen, onClose, onSubmit, patient }) {
       return setError('El número de documento es requerido.');
 
     setSaving(true);
-    const result = await onSubmit(form);
-
-    if (result.success) {
-      onClose();
-    } else {
-      setError(result.error);
+    try {
+      const result = await onSubmit(form);
+      if (result.success) {
+        onClose();
+      } else {
+        setError(result.error);
+        setSaving(false);
+      }
+    } catch (err) {
+      setError('Error inesperado al guardar. Intenta de nuevo.');
       setSaving(false);
     }
   };
