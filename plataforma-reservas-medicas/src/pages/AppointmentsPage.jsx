@@ -13,6 +13,64 @@ import api from '../api/AxiosConfig';
 import './AppointmentsPage.css';
 
 
+// ════════════════════════════════════════════════════════════════
+// HELPER: traducir mensajes de error del backend al español
+// ════════════════════════════════════════════════════════════════
+//
+// El backend lanza mensajes en inglés (ej: "Only CONFIRMED appointments
+// can be marked as NO_SHOW"). Este helper los intercepta y devuelve
+// un mensaje amigable en español.
+//
+// ¿Por qué no cambiar los mensajes en el backend?
+// Porque el backend podría ser consumido por otros clientes (mobile,
+// otros frontends) y los mensajes en inglés son más universales.
+// La traducción es responsabilidad de la capa de presentación.
+//
+// Si el mensaje no coincide con ningún caso conocido,
+// devuelve el mensaje original para no perder información.
+function translateError(message) {
+  if (!message) return 'Ocurrió un error inesperado. Intenta de nuevo.';
+
+  const msg = message.toLowerCase();
+
+  // ── Confirmar ────────────────────────────────────────────
+  if (msg.includes('only scheduled appointments can be confirmed'))
+    return 'Solo las citas en estado "Programada" pueden confirmarse.';
+
+  // ── Cancelar ─────────────────────────────────────────────
+  if (msg.includes('only scheduled or confirmed appointments can be cancelled'))
+    return 'Solo las citas "Programadas" o "Confirmadas" pueden cancelarse.';
+
+  if (msg.includes('cancel reason is required'))
+    return 'El motivo de cancelación es obligatorio.';
+
+  // ── Completar ────────────────────────────────────────────
+  if (msg.includes('only confirmed appointments can be completed'))
+    return 'Solo las citas "Confirmadas" pueden marcarse como completadas.';
+
+  if (msg.includes('cannot be completed before its scheduled start time'))
+    return 'No puedes completar una cita antes de su hora de inicio programada.';
+
+  // ── No-Show ──────────────────────────────────────────────
+  if (msg.includes('only confirmed appointments can be marked as no_show'))
+    return 'Solo las citas "Confirmadas" pueden marcarse como No Asistió.';
+
+  if (msg.includes('cannot be marked as no_show before its scheduled start time'))
+    return 'No puedes registrar inasistencia antes de la hora de inicio de la cita.';
+
+  // ── Acceso denegado (por rol) ────────────────────────────
+  if (msg.includes('access denied') || msg.includes('forbidden'))
+    return 'No tienes permiso para realizar esta acción con tu rol actual.';
+
+  // ── Conflicto genérico ───────────────────────────────────
+  if (msg.includes('conflict'))
+    return 'Esta acción no es válida para el estado actual de la cita.';
+
+  // Fallback: devuelve el mensaje original
+  return message;
+}
+
+
 // ── Badge de estado de la cita ────────────────────────────────
 function AppointmentStatusBadge({ status }) {
   const MAP = {
@@ -28,7 +86,6 @@ function AppointmentStatusBadge({ status }) {
 
 
 // ── Botones de acción según estado ────────────────────────────
-// Encapsula la lógica de "qué botones mostrar según el estado"
 function ActionButtons({ appointment, onConfirm, onCancel, onComplete, onNoShow, loadingId }) {
   const { id, status } = appointment;
   const isLoading = loadingId === id;
@@ -89,17 +146,13 @@ function ActionButtons({ appointment, onConfirm, onCancel, onComplete, onNoShow,
 
 
 // ── Modal: Crear cita ─────────────────────────────────────────
-// Este es el modal más complejo: necesita cargar 4 listas del backend
-// para los dropdowns (pacientes, doctores, consultorios, tipos de cita)
 function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
 
-  // Datos de los dropdowns
   const [dropdowns, setDropdowns] = useState({
     patients: [], doctors: [], offices: [], appointmentTypes: [],
     loading: false, error: null,
   });
 
-  // Datos del formulario
   const [form, setForm] = useState({
     patientId: '', doctorId: '', officeId: '',
     appointmentTypeId: '', startAt: '',
@@ -107,25 +160,22 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState(null);
 
-  // Cargar los datos de los dropdowns al abrir el modal
   useEffect(() => {
     if (!isOpen) return;
 
     const loadDropdowns = async () => {
       setDropdowns(prev => ({ ...prev, loading: true, error: null }));
       try {
-        // Promise.all carga todas las listas en paralelo
         const [patientsData, doctorsData, officesData, typesData] = await Promise.all([
-          getPatients(0, 100),           // Primeros 100 pacientes
+          getPatients(0, 100),
           api.get('/api/doctors', { params: { page: 0, size: 100 } }).then(r => r.data),
-          getOffices(),                  // Todos los consultorios
-          getAppointmentTypes(),         // Todos los tipos de cita
+          getOffices(),
+          getAppointmentTypes(),
         ]);
 
         setDropdowns({
           patients:         patientsData.content ?? [],
           doctors:          doctorsData.content  ?? [],
-          // Solo mostramos consultorios AVAILABLE para crear citas
           offices:          (officesData ?? []).filter(o => o.status === 'AVAILABLE'),
           appointmentTypes: typesData ?? [],
           loading: false, error: null,
@@ -139,7 +189,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
     };
 
     loadDropdowns();
-    // Limpiar form al abrir
     setForm({ patientId: '', doctorId: '', officeId: '', appointmentTypeId: '', startAt: '' });
     setError(null);
   }, [isOpen]);
@@ -159,7 +208,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
     if (!form.appointmentTypeId) return setError('Selecciona un tipo de cita.');
     if (!form.startAt)           return setError('Selecciona fecha y hora.');
 
-    // Validar que la fecha sea futura
     if (new Date(form.startAt) <= new Date())
       return setError('La fecha y hora deben ser futuras.');
 
@@ -169,8 +217,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
       doctorId:          form.doctorId,
       officeId:          form.officeId,
       appointmentTypeId: form.appointmentTypeId,
-      // El input datetime-local da formato "2026-05-22T10:00"
-      // que es exactamente lo que Spring Boot espera
       startAt: form.startAt,
     });
 
@@ -182,9 +228,7 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  // Fecha mínima para el datetime-local: ahora mismo
-  const minDateTime = new Date(Date.now() + 60000)
-    .toISOString().slice(0, 16);
+  const minDateTime = new Date(Date.now() + 60000).toISOString().slice(0, 16);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -197,14 +241,12 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
           </button>
         </div>
 
-        {/* Error de carga de dropdowns */}
         {dropdowns.error && (
           <div className="modal__error">
             <AlertCircle size={16} /><span>{dropdowns.error}</span>
           </div>
         )}
 
-        {/* Error de validación */}
         {error && (
           <div className="modal__error">
             <AlertCircle size={16} /><span>{error}</span>
@@ -220,7 +262,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
           <form onSubmit={handleSubmit} className="modal__form">
             <div className="form-grid">
 
-              {/* Paciente */}
               <div className="form-group">
                 <label htmlFor="a-patient">Paciente *</label>
                 <select id="a-patient" name="patientId"
@@ -235,7 +276,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                 </select>
               </div>
 
-              {/* Doctor */}
               <div className="form-group">
                 <label htmlFor="a-doctor">Doctor *</label>
                 <select id="a-doctor" name="doctorId"
@@ -244,14 +284,12 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                   <option value="">— Seleccionar doctor —</option>
                   {dropdowns.doctors.map(d => (
                     <option key={d.id} value={d.id}>
-                      {d.fullName}
-                      {d.specialty ? ` · ${d.specialty.name}` : ''}
+                      {d.fullName}{d.specialty ? ` · ${d.specialty.name}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Consultorio */}
               <div className="form-group">
                 <label htmlFor="a-office">Consultorio *</label>
                 <select id="a-office" name="officeId"
@@ -271,7 +309,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                 )}
               </div>
 
-              {/* Tipo de cita */}
               <div className="form-group">
                 <label htmlFor="a-type">Tipo de Cita *</label>
                 <select id="a-type" name="appointmentTypeId"
@@ -286,7 +323,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                 </select>
               </div>
 
-              {/* Fecha y hora */}
               <div className="form-group form-group--full">
                 <label htmlFor="a-start">Fecha y Hora de Inicio *</label>
                 <input
@@ -324,7 +360,6 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
 
 
 // ── Modal: Cancelar cita ──────────────────────────────────────
-// Solo requiere una razón (campo obligatorio)
 function CancelModal({ isOpen, appointment, onClose, onSubmit }) {
   const [reason,  setReason]  = useState('');
   const [saving,  setSaving]  = useState(false);
@@ -344,7 +379,7 @@ function CancelModal({ isOpen, appointment, onClose, onSubmit }) {
     if (result.success) {
       onClose();
     } else {
-      setError(result.error);
+      setError(translateError(result.error));
       setSaving(false);
     }
   };
@@ -401,7 +436,6 @@ function CancelModal({ isOpen, appointment, onClose, onSubmit }) {
 
 
 // ── Modal: Completar cita ─────────────────────────────────────
-// Observaciones son opcionales
 function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
   const [observations, setObservations] = useState('');
   const [saving,       setSaving]       = useState(false);
@@ -420,7 +454,7 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
     if (result.success) {
       onClose();
     } else {
-      setError(result.error);
+      setError(translateError(result.error));
       setSaving(false);
     }
   };
@@ -477,6 +511,48 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
 }
 
 
+// ════════════════════════════════════════════════════════════════
+// COMPONENTE: ActionErrorToast
+// ════════════════════════════════════════════════════════════════
+//
+// Muestra el error de una acción de fila (confirmar, no-show)
+// como un banner que se puede cerrar manualmente.
+//
+// ¿Por qué un banner y no un modal?
+// Porque confirmar y no-show son acciones de un solo clic — no tienen
+// modal propio. Si fallan, el error debe aparecer en la página directamente,
+// cerca de la tabla, sin interrumpir el flujo con un modal extra.
+//
+// El banner se cierra:
+//   a) Manualmente con el botón X
+//   b) Automáticamente a los 6 segundos (suficiente para leer el mensaje)
+function ActionErrorToast({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return;
+    // Auto-cierre a los 6 segundos
+    const timer = setTimeout(onClose, 6000);
+    return () => clearTimeout(timer);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return (
+    <div className="action-error-toast">
+      <AlertCircle size={17} className="action-error-toast__icon" />
+      <span className="action-error-toast__text">{message}</span>
+      <button
+        type="button"
+        className="action-error-toast__close"
+        onClick={onClose}
+        aria-label="Cerrar"
+      >
+        <X size={15} />
+      </button>
+    </div>
+  );
+}
+
+
 // ── Helper: formatear fecha ───────────────────────────────────
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -505,7 +581,9 @@ function LoadingSkeleton() {
 }
 
 
-// ── Página principal ──────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// PÁGINA PRINCIPAL: AppointmentsPage
+// ════════════════════════════════════════════════════════════════
 function AppointmentsPage() {
 
   const {
@@ -516,25 +594,35 @@ function AppointmentsPage() {
     doCreate, doConfirm, doCancel, doComplete, doNoShow,
   } = useAppointments();
 
-  // Estado de los modales
   const [createOpen,          setCreateOpen]          = useState(false);
   const [cancelAppointment,   setCancelAppointment]   = useState(null);
   const [completeAppointment, setCompleteAppointment] = useState(null);
+  const [loadingId,           setLoadingId]           = useState(null);
 
-  // loadingId: UUID de la cita que está en progreso de acción
-  // Permite mostrar spinner solo en el botón de esa fila
-  const [loadingId, setLoadingId] = useState(null);
+  // ── NUEVO: error de acciones de fila ────────────────────
+  // Almacena el mensaje traducido del último error de confirmar/no-show.
+  // Se muestra en el ActionErrorToast y se limpia solo o manualmente.
+  const [actionError, setActionError] = useState(null);
 
   // ── Handlers de acciones ────────────────────────────────
+
   const handleConfirm = async (id) => {
     setLoadingId(id);
-    await doConfirm(id);
+    setActionError(null); // limpiar error anterior antes de intentar
+    const result = await doConfirm(id);
+    if (!result.success) {
+      setActionError(translateError(result.error));
+    }
     setLoadingId(null);
   };
 
   const handleNoShow = async (id) => {
     setLoadingId(id);
-    await doNoShow(id);
+    setActionError(null); // limpiar error anterior antes de intentar
+    const result = await doNoShow(id);
+    if (!result.success) {
+      setActionError(translateError(result.error));
+    }
     setLoadingId(null);
   };
 
@@ -560,7 +648,9 @@ function AppointmentsPage() {
           <div>
             <h2 className="page-header__title">Gestión de Citas</h2>
             <p className="page-header__subtitle">
-              {loading ? 'Cargando...' : `${totalElements} cita${totalElements !== 1 ? 's' : ''} encontrada${totalElements !== 1 ? 's' : ''}`}
+              {loading
+                ? 'Cargando...'
+                : `${totalElements} cita${totalElements !== 1 ? 's' : ''} encontrada${totalElements !== 1 ? 's' : ''}`}
             </p>
           </div>
           <button className="btn btn--primary" onClick={() => setCreateOpen(true)}>
@@ -584,12 +674,24 @@ function AppointmentsPage() {
           </select>
         </div>
 
-        {/* ── Error ───────────────────────────────────────── */}
+        {/* ── Error de carga de lista ──────────────────────── */}
         {error && (
           <div className="alert alert--error">
             <AlertCircle size={18} /><span>{error}</span>
           </div>
         )}
+
+        {/*
+          ── NUEVO: Toast de error de acción de fila ─────────
+          Aparece cuando confirmar o no-show fallan.
+          Se posiciona debajo de los filtros, sobre la tabla,
+          para que sea visible sin tapar el contenido.
+          Se cierra solo a los 6 segundos o con el botón X.
+        */}
+        <ActionErrorToast
+          message={actionError}
+          onClose={() => setActionError(null)}
+        />
 
         {/* ── Tabla ───────────────────────────────────────── */}
         <div className="table-card">

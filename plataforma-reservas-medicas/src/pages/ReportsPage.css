@@ -1,0 +1,517 @@
+/* ReportsPage.css */
+/*
+  REUTILIZACIÓN DE ESTILOS:
+  Las clases .btn, .badge, .alert, .table-card, .data-table,
+  .pagination, .modal-overlay, etc. están definidas en DoctorsPage.css
+  o en un archivo global.
+  Este archivo SOLO define lo específico de la página de reportes.
+
+  Si el proyecto tiene un archivo global de estilos compartidos (global.css),
+  estas clases ya están disponibles y este CSS solo añade lo particular.
+  Si no, copia el bloque "ESTILOS COMPARTIDOS" de DoctorsPage.css aquí también.
+*/
+
+/* ══════════════════════════════════════════════════════════
+   PÁGINA DE REPORTES
+   ══════════════════════════════════════════════════════════ */
+
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* ── Encabezado de página ────────────────────────────────── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+.page-header__title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+.page-header__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Ícono decorativo en el encabezado */
+.page-header__icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Filtro de fechas ────────────────────────────────────── */
+.filter-card {
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-card__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0 0 var(--spacing-md);
+}
+
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.filter-group label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Input de fecha en el filtro del reporte */
+.report-date-input {
+  height: 42px;
+  padding: 0 var(--spacing-sm);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 160px;
+}
+.report-date-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.filter-card__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-sm) 0 0;
+  line-height: 1.5;
+}
+
+/* ── Estado inicial (antes de generar) ───────────────────── */
+.reports-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  gap: var(--spacing-sm);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+}
+.reports-empty-state h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.reports-empty-state p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 400px;
+}
+
+/* ── Contenedor de secciones ─────────────────────────────── */
+.reports-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SECCIONES DE REPORTE
+   Cada sección tiene un card con header, descripción y tabla.
+   ══════════════════════════════════════════════════════════ */
+
+.report-section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Cabecera de cada sección */
+.report-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+/* Ícono de la sección con color temático */
+.report-section__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Color oro para productividad */
+.report-section__icon--gold {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+/* Color azul para ocupación */
+.report-section__icon--blue {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+/* Color naranja para no-shows */
+.report-section__icon--orange {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.report-section__title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+}
+.report-section__count {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+/* Descripción de la sección */
+.report-section__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+/* ── Error de sección individual ─────────────────────────── */
+.report-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+/* ── Estado vacío de sección ─────────────────────────────── */
+.report-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  gap: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.report-empty p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ── Skeleton de tabla ───────────────────────────────────── */
+.report-skeleton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+}
+.report-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.report-skeleton__row:last-child { border-bottom: none; }
+
+/* Variantes de ancho para el skeleton */
+.sk--rpt {
+  border-radius: var(--radius-sm);
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 25%,
+    var(--color-bg) 50%,
+    var(--color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  flex-shrink: 0;
+}
+.sk--rpt-sm { width: 48px; }
+.sk--rpt-md { width: 100px; }
+.sk--rpt-lg { flex: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   ELEMENTOS ESPECÍFICOS DE CADA SECCIÓN
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tabla base (igual que en DoctorsPage) ───────────────── */
+/*
+  Estas clases pueden estar en un archivo global.
+  Si no, duplicarlas aquí no hace daño.
+*/
+.table-wrapper { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.data-table th {
+  padding: 10px var(--spacing-md);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 12px var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background-color: #f8faff; }
+.td--muted {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+.fw-medium { font-weight: 500; }
+
+/* ── Celda de doctor / paciente ──────────────────────────── */
+.doctor-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.doctor-cell__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  color: #ffffff;
+}
+/* Verde para doctores */
+.doctor-cell__avatar--report  { background-color: #0d6e3f; }
+/* Azul para pacientes */
+.doctor-cell__avatar--patient { background-color: #1d4ed8; }
+
+.doctor-cell__name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Celda con barra de progreso ─────────────────────────── */
+/*
+  Combina el número con una barra proporcional al máximo del listado.
+  Facilita comparar visualmente sin necesidad de un gráfico externo.
+*/
+.progress-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+}
+.progress-cell__number {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+.progress-bar {
+  height: 6px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+/* Verde para doctores */
+.progress-bar__fill--green { background-color: #16a34a; }
+/* Azul para consultorios */
+.progress-bar__fill--blue  { background-color: #2563eb; }
+
+/* ── Celda de tiempo (minutos formateados) ───────────────── */
+.time-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ── Medallas de ranking ─────────────────────────────────── */
+.rank-medal {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+.rank-medal--gold   { background-color: #fef9c3; color: #a16207; }
+.rank-medal--silver { background-color: #f1f5f9; color: #475569; }
+.rank-medal--bronze { background-color: #ffedd5; color: #c2410c; }
+
+.rank-number {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+/* ── Badge de no-show (en tabla de consultorios) ─────────── */
+.noshow-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+/* ── Nivel de severidad no-show (en tabla de pacientes) ──── */
+/*
+  Verde → 1-2 inasistencias (bajo)
+  Naranja → 3-4 inasistencias (medio)
+  Rojo → 5+ inasistencias (alto)
+  Permite identificar rápidamente los casos más críticos.
+*/
+.noshow-severity {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.noshow-severity--low  {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+}
+.noshow-severity--mid  {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+}
+.noshow-severity--high {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ESTILOS COMPARTIDOS (si no están en global)
+   ══════════════════════════════════════════════════════════ */
+/* Botones, alert, spin — se reutilizan de DoctorsPage.css.
+   Sólo los declaramos si el proyecto no tiene un archivo global. */
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px;
+  border-radius: var(--radius-md); font-size: var(--text-sm); font-family: var(--font-body);
+  font-weight: 600; cursor: pointer; border: none;
+  transition: background-color 0.18s ease, opacity 0.18s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn--primary { background-color: var(--color-primary); color: #ffffff; }
+.btn--primary:hover:not(:disabled) { background-color: var(--color-primary-dark); }
+
+.alert {
+  display: flex; align-items: center; gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md); font-size: var(--text-sm);
+}
+.alert--error {
+  background: #fef2f2; border: 1px solid #fecaca; color: var(--color-error);
+}
+
+.spin { animation: spin-anim 0.9s linear infinite; }
+@keyframes spin-anim { to { transform: rotate(360deg); } }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .report-date-input {
+    width: 100%;
+  }
+  .progress-cell {
+    min-width: 70px;
+  }
+}
