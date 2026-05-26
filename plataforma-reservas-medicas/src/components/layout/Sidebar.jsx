@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { to: '/appointment-types', icon: Clock,           label: 'Tipos de Cita'  }, // ← NUEVO
   { to: '/specialties',       icon: Stethoscope,     label: 'Especialidades'  },
   { to: '/offices',           icon: Building2,       label: 'Consultorios'    },
-  { to: '/schedules',         icon: ClipboardList,   label: 'Horarios'        },
+  { to: '/availability',      icon: ClipboardList,   label: 'Disponibilidad'        },
   { to: '/reports',           icon: BarChart3,       label: 'Reportes'        },
 ];
 

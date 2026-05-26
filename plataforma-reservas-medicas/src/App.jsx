@@ -8,7 +8,7 @@ import AppointmentsPage              from './pages/AppointmentsPage';
 import AppointmentTypesPage          from './pages/AppointmentTypesPage';  // ← nuevo
 import SpecialtiesPage               from './pages/SpecialtiesPage';
 import OfficesPage                   from './pages/OfficesPage';
-import SchedulesPage                 from './pages/SchedulesPage';
+import AvailabilityPage                 from './pages/AvailabilityPage';
 import ReportsPage                   from './pages/ReportsPage';
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
       <Route path="/appointment-types" element={<PrivateRoute><AppointmentTypesPage /></PrivateRoute>} />
       <Route path="/specialties"       element={<PrivateRoute><SpecialtiesPage /></PrivateRoute>} />
       <Route path="/offices"           element={<PrivateRoute><OfficesPage /></PrivateRoute>} />
-      <Route path="/schedules"         element={<PrivateRoute><SchedulesPage /></PrivateRoute>} />
+      <Route path="/availability"         element={<PrivateRoute><AvailabilityPage /></PrivateRoute>} />
       <Route path="/reports"           element={<PrivateRoute><ReportsPage /></PrivateRoute>} />
 
       <Route path="/"  element={<Navigate to="/dashboard" replace />} />

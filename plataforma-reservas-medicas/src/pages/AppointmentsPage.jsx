@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Plus, Search, Calendar, ChevronLeft, ChevronRight,
-  AlertCircle, X, Save, Loader, CheckCircle,
+  AlertCircle, X, Loader, CheckCircle,
   XCircle, ClipboardList, UserX,
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
@@ -16,69 +16,57 @@ import './AppointmentsPage.css';
 // ════════════════════════════════════════════════════════════════
 // HELPER: traducir mensajes de error del backend al español
 // ════════════════════════════════════════════════════════════════
-//
-// El backend lanza mensajes en inglés (ej: "Only CONFIRMED appointments
-// can be marked as NO_SHOW"). Este helper los intercepta y devuelve
-// un mensaje amigable en español.
-//
-// ¿Por qué no cambiar los mensajes en el backend?
-// Porque el backend podría ser consumido por otros clientes (mobile,
-// otros frontends) y los mensajes en inglés son más universales.
-// La traducción es responsabilidad de la capa de presentación.
-//
-// Si el mensaje no coincide con ningún caso conocido,
-// devuelve el mensaje original para no perder información.
 function translateError(message) {
   if (!message) return 'Ocurrió un error inesperado. Intenta de nuevo.';
-
   const msg = message.toLowerCase();
 
-  // ── Confirmar ────────────────────────────────────────────
   if (msg.includes('only scheduled appointments can be confirmed'))
     return 'Solo las citas en estado "Programada" pueden confirmarse.';
-
-  // ── Cancelar ─────────────────────────────────────────────
   if (msg.includes('only scheduled or confirmed appointments can be cancelled'))
     return 'Solo las citas "Programadas" o "Confirmadas" pueden cancelarse.';
-
   if (msg.includes('cancel reason is required'))
     return 'El motivo de cancelación es obligatorio.';
-
-  // ── Completar ────────────────────────────────────────────
   if (msg.includes('only confirmed appointments can be completed'))
     return 'Solo las citas "Confirmadas" pueden marcarse como completadas.';
-
   if (msg.includes('cannot be completed before its scheduled start time'))
     return 'No puedes completar una cita antes de su hora de inicio programada.';
-
-  // ── No-Show ──────────────────────────────────────────────
   if (msg.includes('only confirmed appointments can be marked as no_show'))
     return 'Solo las citas "Confirmadas" pueden marcarse como No Asistió.';
-
   if (msg.includes('cannot be marked as no_show before its scheduled start time'))
     return 'No puedes registrar inasistencia antes de la hora de inicio de la cita.';
-
-  // ── Acceso denegado (por rol) ────────────────────────────
   if (msg.includes('access denied') || msg.includes('forbidden'))
     return 'No tienes permiso para realizar esta acción con tu rol actual.';
-
-  // ── Conflicto genérico ───────────────────────────────────
   if (msg.includes('conflict'))
     return 'Esta acción no es válida para el estado actual de la cita.';
 
-  // Fallback: devuelve el mensaje original
   return message;
 }
 
 
-// ── Badge de estado de la cita ────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// HELPER: hora mínima en hora local (fix UTC bug)
+// ════════════════════════════════════════════════════════════════
+function localDateTimeMin() {
+  const now = new Date(Date.now() + 60000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${now.getFullYear()}-` +
+    `${pad(now.getMonth() + 1)}-` +
+    `${pad(now.getDate())}T` +
+    `${pad(now.getHours())}:` +
+    `${pad(now.getMinutes())}`
+  );
+}
+
+
+// ── Badge de estado ───────────────────────────────────────────
 function AppointmentStatusBadge({ status }) {
   const MAP = {
-    SCHEDULED:  { label: 'Programada',  cls: 'badge--blue'   },
-    CONFIRMED:  { label: 'Confirmada',  cls: 'badge--green'  },
-    COMPLETED:  { label: 'Completada',  cls: 'badge--teal'   },
-    CANCELLED:  { label: 'Cancelada',   cls: 'badge--red'    },
-    NO_SHOW:    { label: 'No asistió',  cls: 'badge--orange' },
+    SCHEDULED: { label: 'Programada',  cls: 'badge--blue'   },
+    CONFIRMED: { label: 'Confirmada',  cls: 'badge--green'  },
+    COMPLETED: { label: 'Completada',  cls: 'badge--teal'   },
+    CANCELLED: { label: 'Cancelada',   cls: 'badge--red'    },
+    NO_SHOW:   { label: 'No asistió',  cls: 'badge--orange' },
   };
   const { label, cls } = MAP[status] ?? { label: status, cls: 'badge--gray' };
   return <span className={`badge ${cls}`}>{label}</span>;
@@ -145,9 +133,140 @@ function ActionButtons({ appointment, onConfirm, onCancel, onComplete, onNoShow,
 }
 
 
+// ════════════════════════════════════════════════════════════════
+// COMPONENTE: SearchableSelect
+// ════════════════════════════════════════════════════════════════
+//
+// Usa su propia clase CSS "searchable-select__input" en lugar de
+// "form-select", para evitar heredar el chevron y otros estilos
+// propios del <select> nativo.
+// El dropdown se posiciona con position:absolute sobre el flujo
+// normal; el wrapper tiene position:relative para contenerlo.
+function SearchableSelect({ id, items, value, onChange, labelFn, sublabelFn, placeholder, disabled }) {
+  const [query, setQuery] = useState('');
+  const [open,  setOpen]  = useState(false);
+
+  const selected = items.find((i) => String(i.id) === String(value)) ?? null;
+
+  const filtered = (() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items.slice(0, 10);
+    return items.filter(
+      (i) =>
+        labelFn(i).toLowerCase().includes(q) ||
+        (i.documentNumber && i.documentNumber.includes(q))
+    );
+  })();
+
+  const highlight = (text) => {
+    const q = query.trim();
+    if (!q || !text) return text ?? '';
+    const re = new RegExp(
+      `(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+      'gi'
+    );
+    return text.replace(re, '<mark class="ss-highlight">$1</mark>');
+  };
+
+  const handleSelect = (item) => {
+    onChange(String(item.id));
+    setQuery('');
+    setOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange('');
+    setQuery('');
+  };
+
+  return (
+    <div className="searchable-select">
+      {/* Trigger / input de búsqueda */}
+      <div className="searchable-select__trigger">
+        <Search size={14} className="searchable-select__icon" aria-hidden="true" />
+
+        <input
+          id={id}
+          type="text"
+          className={`searchable-select__input${selected ? ' searchable-select__input--selected' : ''}`}
+          placeholder={selected ? labelFn(selected) : placeholder}
+          value={selected ? '' : query}
+          disabled={disabled}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            onChange('');
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          autoComplete="off"
+        />
+
+        {selected && !disabled && (
+          <button
+            type="button"
+            className="searchable-select__clear"
+            onClick={handleClear}
+            title="Limpiar selección"
+            aria-label="Limpiar selección"
+          >
+            <X size={13} />
+          </button>
+        )}
+      </div>
+
+      {/* Chip de selección activa */}
+      {selected && (
+        <p className="searchable-select__chip">
+          <CheckCircle size={12} className="searchable-select__chip-icon" />
+          <span className="searchable-select__chip-name">{labelFn(selected)}</span>
+          {selected.documentNumber && (
+            <span className="searchable-select__chip-doc">{selected.documentNumber}</span>
+          )}
+        </p>
+      )}
+
+      {/* Dropdown */}
+      {open && !selected && (
+        <div className="searchable-select__dropdown">
+          {filtered.length === 0 ? (
+            <div className="searchable-select__empty">
+              Sin resultados para "<strong>{query}</strong>"
+            </div>
+          ) : (
+            filtered.map((item) => (
+              <div
+                key={item.id}
+                className="searchable-select__option"
+                onMouseEnter={(e) => e.currentTarget.classList.add('searchable-select__option--hover')}
+                onMouseLeave={(e) => e.currentTarget.classList.remove('searchable-select__option--hover')}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(item);
+                }}
+              >
+                <span
+                  className="searchable-select__option-name"
+                  dangerouslySetInnerHTML={{ __html: highlight(labelFn(item)) }}
+                />
+                {sublabelFn && (
+                  <span
+                    className="searchable-select__option-sub"
+                    dangerouslySetInnerHTML={{ __html: highlight(sublabelFn(item)) }}
+                  />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── Modal: Crear cita ─────────────────────────────────────────
 function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
-
   const [dropdowns, setDropdowns] = useState({
     patients: [], doctors: [], offices: [], appointmentTypes: [],
     loading: false, error: null,
@@ -164,11 +283,11 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
     if (!isOpen) return;
 
     const loadDropdowns = async () => {
-      setDropdowns(prev => ({ ...prev, loading: true, error: null }));
+      setDropdowns((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const [patientsData, doctorsData, officesData, typesData] = await Promise.all([
           getPatients(0, 100),
-          api.get('/api/doctors', { params: { page: 0, size: 100 } }).then(r => r.data),
+          api.get('/api/doctors', { params: { page: 0, size: 100 } }).then((r) => r.data),
           getOffices(),
           getAppointmentTypes(),
         ]);
@@ -176,12 +295,12 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
         setDropdowns({
           patients:         patientsData.content ?? [],
           doctors:          doctorsData.content  ?? [],
-          offices:          (officesData ?? []).filter(o => o.status === 'AVAILABLE'),
+          offices:          (officesData ?? []).filter((o) => o.status === 'AVAILABLE'),
           appointmentTypes: typesData ?? [],
           loading: false, error: null,
         });
-      } catch (err) {
-        setDropdowns(prev => ({
+      } catch {
+        setDropdowns((prev) => ({
           ...prev, loading: false,
           error: 'No se pudieron cargar los datos del formulario.',
         }));
@@ -196,7 +315,7 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
   if (!isOpen) return null;
 
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     if (error) setError(null);
   };
 
@@ -217,7 +336,9 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
       doctorId:          form.doctorId,
       officeId:          form.officeId,
       appointmentTypeId: form.appointmentTypeId,
-      startAt: form.startAt,
+      // Fix zona horaria: convierte hora local → ISO UTC para que el backend
+      // valide correctamente (el backend trabaja en UTC)
+      startAt: new Date(form.startAt).toISOString(),
     });
 
     if (result.success) {
@@ -228,11 +349,11 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  const minDateTime = new Date(Date.now() + 60000).toISOString().slice(0, 16);
+  const minDateTime = localDateTimeMin();
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--large" onClick={e => e.stopPropagation()}>
+      <div className="modal modal--large" onClick={(e) => e.stopPropagation()}>
 
         <div className="modal__header">
           <h3>Nueva Cita Médica</h3>
@@ -262,41 +383,51 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
           <form onSubmit={handleSubmit} className="modal__form">
             <div className="form-grid">
 
+              {/* ── Paciente ── */}
               <div className="form-group">
                 <label htmlFor="a-patient">Paciente *</label>
-                <select id="a-patient" name="patientId"
-                  value={form.patientId} onChange={handleChange}
-                  disabled={saving} className="form-select">
-                  <option value="">— Seleccionar paciente —</option>
-                  {dropdowns.patients.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName} · {p.documentNumber}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  id="a-patient"
+                  items={dropdowns.patients}
+                  value={form.patientId}
+                  onChange={(v) => { setForm((p) => ({ ...p, patientId: v })); if (error) setError(null); }}
+                  labelFn={(p) => p.fullName}
+                  sublabelFn={(p) => p.documentNumber ?? ''}
+                  placeholder="Buscar por nombre o N.º documento..."
+                  disabled={saving}
+                />
               </div>
 
+              {/* ── Doctor ── */}
               <div className="form-group">
                 <label htmlFor="a-doctor">Doctor *</label>
-                <select id="a-doctor" name="doctorId"
-                  value={form.doctorId} onChange={handleChange}
-                  disabled={saving} className="form-select">
-                  <option value="">— Seleccionar doctor —</option>
-                  {dropdowns.doctors.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.fullName}{d.specialty ? ` · ${d.specialty.name}` : ''}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  id="a-doctor"
+                  items={dropdowns.doctors}
+                  value={form.doctorId}
+                  onChange={(v) => { setForm((p) => ({ ...p, doctorId: v })); if (error) setError(null); }}
+                  labelFn={(d) => d.fullName}
+                  sublabelFn={(d) =>
+                    [d.documentNumber, d.specialty?.name].filter(Boolean).join(' · ')
+                  }
+                  placeholder="Buscar por nombre o N.º documento..."
+                  disabled={saving}
+                />
               </div>
 
+              {/* ── Consultorio ── */}
               <div className="form-group">
                 <label htmlFor="a-office">Consultorio *</label>
-                <select id="a-office" name="officeId"
-                  value={form.officeId} onChange={handleChange}
-                  disabled={saving} className="form-select">
+                <select
+                  id="a-office"
+                  name="officeId"
+                  value={form.officeId}
+                  onChange={handleChange}
+                  disabled={saving}
+                  className="form-select"
+                >
                   <option value="">— Seleccionar consultorio —</option>
-                  {dropdowns.offices.map(o => (
+                  {dropdowns.offices.map((o) => (
                     <option key={o.id} value={o.id}>
                       Sala {o.roomNumber} · {o.name}
                     </option>
@@ -304,18 +435,24 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                 </select>
                 {dropdowns.offices.length === 0 && (
                   <p className="form-hint form-hint--warn">
-                    No hay consultorios disponibles en este momento.
+                    No hay consultorios disponibles.
                   </p>
                 )}
               </div>
 
+              {/* ── Tipo de cita ── */}
               <div className="form-group">
                 <label htmlFor="a-type">Tipo de Cita *</label>
-                <select id="a-type" name="appointmentTypeId"
-                  value={form.appointmentTypeId} onChange={handleChange}
-                  disabled={saving} className="form-select">
+                <select
+                  id="a-type"
+                  name="appointmentTypeId"
+                  value={form.appointmentTypeId}
+                  onChange={handleChange}
+                  disabled={saving}
+                  className="form-select"
+                >
                   <option value="">— Seleccionar tipo —</option>
-                  {dropdowns.appointmentTypes.map(t => (
+                  {dropdowns.appointmentTypes.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name} · {t.durationMinutes} min
                     </option>
@@ -323,12 +460,14 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
                 </select>
               </div>
 
+              {/* ── Fecha y hora ── */}
               <div className="form-group form-group--full">
                 <label htmlFor="a-start">Fecha y Hora de Inicio *</label>
                 <input
                   id="a-start"
                   name="startAt"
                   type="datetime-local"
+                  className="form-select"
                   value={form.startAt}
                   min={minDateTime}
                   onChange={handleChange}
@@ -342,8 +481,9 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
             </div>
 
             <div className="modal__footer">
-              <button type="button" className="btn btn--ghost"
-                onClick={onClose} disabled={saving}>Cancelar</button>
+              <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>
+                Cancelar
+              </button>
               <button type="submit" className="btn btn--primary" disabled={saving}>
                 {saving
                   ? <><Loader size={16} className="spin" /> Creando cita...</>
@@ -386,7 +526,7 @@ function CancelModal({ isOpen, appointment, onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--small" onClick={e => e.stopPropagation()}>
+      <div className="modal modal--small" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
           <h3>Cancelar Cita</h3>
           <button type="button" className="modal__close" onClick={onClose}><X size={20} /></button>
@@ -411,7 +551,7 @@ function CancelModal({ isOpen, appointment, onClose, onSubmit }) {
               rows={3}
               placeholder="Describe el motivo de la cancelación..."
               value={reason}
-              onChange={e => { setReason(e.target.value); if (error) setError(null); }}
+              onChange={(e) => { setReason(e.target.value); if (error) setError(null); }}
               disabled={saving}
               maxLength={1000}
             />
@@ -461,7 +601,7 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--small" onClick={e => e.stopPropagation()}>
+      <div className="modal modal--small" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
           <h3>Completar Cita</h3>
           <button type="button" className="modal__close" onClick={onClose}><X size={20} /></button>
@@ -480,7 +620,7 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
           <div className="form-group">
             <label htmlFor="obs">
               Observaciones
-              <span className="label-optional">(opcional)</span>
+              <span className="label-optional"> (opcional)</span>
             </label>
             <textarea
               id="obs"
@@ -488,7 +628,7 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
               rows={3}
               placeholder="Ej: Paciente respondió bien al tratamiento..."
               value={observations}
-              onChange={e => setObservations(e.target.value)}
+              onChange={(e) => setObservations(e.target.value)}
               disabled={saving}
               maxLength={1000}
             />
@@ -511,25 +651,10 @@ function CompleteModal({ isOpen, appointment, onClose, onSubmit }) {
 }
 
 
-// ════════════════════════════════════════════════════════════════
-// COMPONENTE: ActionErrorToast
-// ════════════════════════════════════════════════════════════════
-//
-// Muestra el error de una acción de fila (confirmar, no-show)
-// como un banner que se puede cerrar manualmente.
-//
-// ¿Por qué un banner y no un modal?
-// Porque confirmar y no-show son acciones de un solo clic — no tienen
-// modal propio. Si fallan, el error debe aparecer en la página directamente,
-// cerca de la tabla, sin interrumpir el flujo con un modal extra.
-//
-// El banner se cierra:
-//   a) Manualmente con el botón X
-//   b) Automáticamente a los 6 segundos (suficiente para leer el mensaje)
+// ── ActionErrorToast ──────────────────────────────────────────
 function ActionErrorToast({ message, onClose }) {
   useEffect(() => {
     if (!message) return;
-    // Auto-cierre a los 6 segundos
     const timer = setTimeout(onClose, 6000);
     return () => clearTimeout(timer);
   }, [message, onClose]);
@@ -540,12 +665,7 @@ function ActionErrorToast({ message, onClose }) {
     <div className="action-error-toast">
       <AlertCircle size={17} className="action-error-toast__icon" />
       <span className="action-error-toast__text">{message}</span>
-      <button
-        type="button"
-        className="action-error-toast__close"
-        onClick={onClose}
-        aria-label="Cerrar"
-      >
+      <button type="button" className="action-error-toast__close" onClick={onClose} aria-label="Cerrar">
         <X size={15} />
       </button>
     </div>
@@ -573,7 +693,12 @@ function LoadingSkeleton() {
           <div className="sk sk--md" />
           <div className="sk sk--md" />
           <div className="sk sk--badge" />
-          <div style={{ width: 160, height: 28, borderRadius: 6, flexShrink: 0, background: 'linear-gradient(90deg,var(--color-border) 25%,var(--color-bg) 50%,var(--color-border) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+          <div style={{
+            width: 160, height: 28, borderRadius: 6, flexShrink: 0,
+            background: 'linear-gradient(90deg,var(--color-border) 25%,var(--color-bg) 50%,var(--color-border) 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.4s infinite',
+          }} />
         </div>
       ))}
     </div>
@@ -582,10 +707,9 @@ function LoadingSkeleton() {
 
 
 // ════════════════════════════════════════════════════════════════
-// PÁGINA PRINCIPAL: AppointmentsPage
+// PÁGINA PRINCIPAL
 // ════════════════════════════════════════════════════════════════
 function AppointmentsPage() {
-
   const {
     appointments, loading, error,
     totalPages, totalElements,
@@ -598,31 +722,21 @@ function AppointmentsPage() {
   const [cancelAppointment,   setCancelAppointment]   = useState(null);
   const [completeAppointment, setCompleteAppointment] = useState(null);
   const [loadingId,           setLoadingId]           = useState(null);
-
-  // ── NUEVO: error de acciones de fila ────────────────────
-  // Almacena el mensaje traducido del último error de confirmar/no-show.
-  // Se muestra en el ActionErrorToast y se limpia solo o manualmente.
-  const [actionError, setActionError] = useState(null);
-
-  // ── Handlers de acciones ────────────────────────────────
+  const [actionError,         setActionError]         = useState(null);
 
   const handleConfirm = async (id) => {
     setLoadingId(id);
-    setActionError(null); // limpiar error anterior antes de intentar
+    setActionError(null);
     const result = await doConfirm(id);
-    if (!result.success) {
-      setActionError(translateError(result.error));
-    }
+    if (!result.success) setActionError(translateError(result.error));
     setLoadingId(null);
   };
 
   const handleNoShow = async (id) => {
     setLoadingId(id);
-    setActionError(null); // limpiar error anterior antes de intentar
+    setActionError(null);
     const result = await doNoShow(id);
-    if (!result.success) {
-      setActionError(translateError(result.error));
-    }
+    if (!result.success) setActionError(translateError(result.error));
     setLoadingId(null);
   };
 
@@ -638,12 +752,10 @@ function AppointmentsPage() {
     return result;
   };
 
-
   return (
     <MainLayout pageTitle="Citas">
       <div className="appointments-page">
 
-        {/* ── Encabezado ─────────────────────────────────── */}
         <div className="page-header">
           <div>
             <h2 className="page-header__title">Gestión de Citas</h2>
@@ -658,12 +770,11 @@ function AppointmentsPage() {
           </button>
         </div>
 
-        {/* ── Filtros ─────────────────────────────────────── */}
         <div className="filters-bar">
           <select
             className="filter-select"
             value={filters.status}
-            onChange={e => updateFilters({ ...filters, status: e.target.value })}
+            onChange={(e) => updateFilters({ ...filters, status: e.target.value })}
           >
             <option value="">Todos los estados</option>
             <option value="SCHEDULED">Programadas</option>
@@ -674,26 +785,14 @@ function AppointmentsPage() {
           </select>
         </div>
 
-        {/* ── Error de carga de lista ──────────────────────── */}
         {error && (
           <div className="alert alert--error">
             <AlertCircle size={18} /><span>{error}</span>
           </div>
         )}
 
-        {/*
-          ── NUEVO: Toast de error de acción de fila ─────────
-          Aparece cuando confirmar o no-show fallan.
-          Se posiciona debajo de los filtros, sobre la tabla,
-          para que sea visible sin tapar el contenido.
-          Se cierra solo a los 6 segundos o con el botón X.
-        */}
-        <ActionErrorToast
-          message={actionError}
-          onClose={() => setActionError(null)}
-        />
+        <ActionErrorToast message={actionError} onClose={() => setActionError(null)} />
 
-        {/* ── Tabla ───────────────────────────────────────── */}
         <div className="table-card">
           {loading ? (
             <LoadingSkeleton />
@@ -725,51 +824,42 @@ function AppointmentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {appointments.map(appt => (
+                  {appointments.map((appt) => (
                     <tr key={appt.id}>
-
                       <td>
                         <div className="person-cell">
                           <div className="person-cell__avatar person-cell__avatar--patient">
                             {appt.patient?.fullName?.charAt(0).toUpperCase() ?? '?'}
                           </div>
-                          <span className="person-cell__name">
-                            {appt.patient?.fullName ?? '—'}
-                          </span>
+                          <span className="person-cell__name">{appt.patient?.fullName ?? '—'}</span>
                         </div>
                       </td>
-
                       <td>
                         <div className="person-cell">
                           <div className="person-cell__avatar person-cell__avatar--doctor">
                             {appt.doctor?.fullName?.charAt(0).toUpperCase() ?? '?'}
                           </div>
-                          <span className="person-cell__name">
-                            {appt.doctor?.fullName ?? '—'}
-                          </span>
+                          <span className="person-cell__name">{appt.doctor?.fullName ?? '—'}</span>
                         </div>
                       </td>
-
                       <td>
                         <div className="date-cell">
                           <span className="date-cell__date">
                             {new Date(appt.startAt).toLocaleDateString('es-CO', {
-                              day: '2-digit', month: 'short', year: 'numeric'
+                              day: '2-digit', month: 'short', year: 'numeric',
                             })}
                           </span>
                           <span className="date-cell__time">
                             {new Date(appt.startAt).toLocaleTimeString('es-CO', {
-                              hour: '2-digit', minute: '2-digit'
+                              hour: '2-digit', minute: '2-digit',
                             })}
                             {appt.endAt && ` – ${new Date(appt.endAt).toLocaleTimeString('es-CO', {
-                              hour: '2-digit', minute: '2-digit'
+                              hour: '2-digit', minute: '2-digit',
                             })}`}
                           </span>
                         </div>
                       </td>
-
                       <td><AppointmentStatusBadge status={appt.status} /></td>
-
                       <td>
                         <ActionButtons
                           appointment={appt}
@@ -780,7 +870,6 @@ function AppointmentsPage() {
                           onComplete={(a) => setCompleteAppointment(a)}
                         />
                       </td>
-
                     </tr>
                   ))}
                 </tbody>
@@ -789,7 +878,6 @@ function AppointmentsPage() {
           )}
         </div>
 
-        {/* ── Paginación ─────────────────────────────────── */}
         {!loading && totalPages > 1 && (
           <div className="pagination">
             <span className="pagination__info">
@@ -797,7 +885,7 @@ function AppointmentsPage() {
             </span>
             <div className="pagination__controls">
               <button className="pagination__btn"
-                onClick={() => setCurrentPage(p => p - 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 disabled={currentPage === 0}>
                 <ChevronLeft size={17} />
               </button>
@@ -809,7 +897,7 @@ function AppointmentsPage() {
                 </button>
               ))}
               <button className="pagination__btn"
-                onClick={() => setCurrentPage(p => p + 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 disabled={currentPage === totalPages - 1}>
                 <ChevronRight size={17} />
               </button>
@@ -817,20 +905,17 @@ function AppointmentsPage() {
           </div>
         )}
 
-        {/* ── Modales ────────────────────────────────────── */}
         <CreateAppointmentModal
           isOpen={createOpen}
           onClose={() => setCreateOpen(false)}
           onSubmit={doCreate}
         />
-
         <CancelModal
           isOpen={cancelAppointment !== null}
           appointment={cancelAppointment}
           onClose={() => setCancelAppointment(null)}
           onSubmit={handleCancelSubmit}
         />
-
         <CompleteModal
           isOpen={completeAppointment !== null}
           appointment={completeAppointment}

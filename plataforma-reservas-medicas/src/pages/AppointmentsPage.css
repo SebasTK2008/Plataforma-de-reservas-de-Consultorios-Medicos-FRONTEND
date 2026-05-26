@@ -1,55 +1,132 @@
+/* ════════════════════════════════════════════════════════════════
+   AppointmentsPage.css
+   Solo estilos ESPECÍFICOS de esta página.
+   Lo siguiente ya está en components.css y NO se repite aquí:
+     - .btn, .btn--*, .btn--danger
+     - .badge, .badge--*
+     - .alert, .alert--error
+     - .table-card, .table-wrapper, .data-table, .data-table th/td
+     - .skeleton-table, .skeleton-row, .sk, .sk--*, @keyframes shimmer
+     - .empty-state, .empty-state__icon
+     - .pagination, .pagination__*
+     - .modal-overlay, .modal, .modal__*, @keyframes modal-up, overlay-in
+     - .form-grid, .form-group, .form-group--full, .form-group label
+     - .form-select, .form-textarea, .form-hint, .form-hint--warn
+     - .form-readonly, .label-optional, .form-section-title
+     - .page-header, .page-header__title, .page-header__subtitle
+     - .action-error-toast, .action-error-toast__*
+     - .spin, @keyframes spin-anim
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Layout de página ───────────────────────────────────────── */
 .appointments-page {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
 }
 
-/* Encabezado */
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--spacing-md); }
-.page-header__title { font-size: var(--text-2xl); font-weight: 700; color: var(--color-text-primary); margin: 0 0 4px; }
-.page-header__subtitle { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
-
-/* Filtros */
-.filters-bar { display: flex; gap: var(--spacing-md); flex-wrap: wrap; }
-.filter-select {
-  height: 44px; padding: 0 var(--spacing-sm);
-  border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
-  font-size: var(--text-sm); font-family: var(--font-body);
-  color: var(--color-text-primary); background-color: var(--color-surface);
-  outline: none; cursor: pointer; min-width: 200px;
-  transition: border-color 0.2s; appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c6370' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 10px center; padding-right: 36px;
+/* ── Filtros ────────────────────────────────────────────────── */
+.filters-bar {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
 }
-.filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
 
-/* Celda de persona (paciente / doctor) */
-.person-cell { display: flex; align-items: center; gap: var(--spacing-sm); }
+.filter-select {
+  height: 44px;
+  padding: 0 36px 0 var(--spacing-sm);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  outline: none;
+  cursor: pointer;
+  min-width: 200px;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c6370' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.filter-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* ── Celda de persona (paciente / doctor) ───────────────────── */
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
 .person-cell__avatar {
-  width: 32px; height: 32px; border-radius: var(--radius-full);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: var(--text-xs); flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  flex-shrink: 0;
   font-family: var(--font-heading);
 }
 .person-cell__avatar--patient { background-color: #eff6ff; color: #1d4ed8; }
 .person-cell__avatar--doctor  { background-color: #f0fdf4; color: #15803d; }
-.person-cell__name { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-primary); }
+.person-cell__name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
 
-/* Celda de fecha */
-.date-cell { display: flex; flex-direction: column; gap: 2px; }
-.date-cell__date { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-primary); }
-.date-cell__time { font-size: var(--text-xs); color: var(--color-text-secondary); }
+/* ── Celda de fecha ─────────────────────────────────────────── */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.date-cell__date {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.date-cell__time {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
 
-/* Botones de acción de la fila */
-.action-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
-.no-actions { color: var(--color-text-secondary); font-size: var(--text-xs); }
+/* ── Botones de acción en filas de la tabla ─────────────────── */
+/*
+  Distintos de .action-btn de components.css:
+  esos son íconos cuadrados (32×32px) para editar/eliminar.
+  Estos son píldoras con texto + ícono, específicas del flujo
+  de estados de citas (confirmar, completar, no-show, cancelar).
+*/
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.no-actions {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
 
 .appt-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 4px 10px; border-radius: var(--radius-sm);
-  font-size: var(--text-xs); font-weight: 600;
-  font-family: var(--font-body); cursor: pointer; border: none;
-  transition: all 0.15s; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 .appt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -65,37 +142,47 @@
 .appt-btn--cancel   { background: #fef2f2; color: #b91c1c; }
 .appt-btn--cancel:hover:not(:disabled)   { background: #b91c1c; color: #fff; }
 
-/* Modal más grande para creación */
-.modal--large  { max-width: 680px; }
-.modal--small  { max-width: 480px; }
-
-/* Loading dentro del modal */
-.modal__loading {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: var(--spacing-2xl);
-  gap: var(--spacing-md); color: var(--color-text-secondary);
-}
-.modal__loading p { font-size: var(--text-sm); margin: 0; }
-
-/* Info de la cita dentro de modales de acción */
-.modal__info {
-  margin: 0 var(--spacing-lg);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-}
-.modal__info-text {
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  margin: 0;
-  line-height: 1.8;
+/* ── datetime-local: quitar el chevron que hereda de .form-select ── */
+/*
+  components.css define .form-select con appearance:none y un
+  background-image de chevron. El <input type="datetime-local">
+  también recibe esa clase, así que necesita sobreescribir el
+  chevron porque ya tiene su propio picker nativo.
+*/
+input[type="datetime-local"].form-select {
+  padding-right: 12px;
+  background-image: none;
+  cursor: text;
 }
 
-/* Textarea del modal */
-.form-textarea {
+/* ════════════════════════════════════════════════════════════════
+   SearchableSelect
+   Bloque BEM propio. No hereda nada de .form-select para evitar
+   el chevron y el appearance:none del <select> nativo.
+   ════════════════════════════════════════════════════════════════ */
+.searchable-select {
+  position: relative;
+}
+
+.searchable-select__trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchable-select__icon {
+  position: absolute;
+  left: 11px;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Misma altura/borde/radio que .form-select, sin chevron */
+.searchable-select__input {
   width: 100%;
-  padding: var(--spacing-sm);
+  height: 42px;
+  padding: 0 36px 0 32px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -103,86 +190,119 @@
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   outline: none;
-  resize: vertical;
-  min-height: 80px;
+  cursor: text;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
 }
-.form-textarea:focus {
+.searchable-select__input::placeholder {
+  color: var(--color-text-secondary);
+}
+.searchable-select__input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
-.form-textarea:disabled { background-color: var(--color-bg); cursor: not-allowed; opacity: 0.65; }
+.searchable-select__input:disabled {
+  background-color: var(--color-bg);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+/* Borde verde suave cuando hay item seleccionado */
+.searchable-select__input--selected {
+  border-color: #86efac;
+}
+.searchable-select__input--selected:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
 
-/* Hint de advertencia */
-.form-hint--warn { color: var(--color-warning); }
-
-/* Botón danger */
-.btn--danger { background-color: #dc2626; color: #fff; }
-.btn--danger:hover:not(:disabled) { background-color: #b91c1c; }
-
-
-
-/* ══════════════════════════════════════════════════════════
-   AGREGAR AL FINAL DE AppointmentsPage.css
-   ══════════════════════════════════════════════════════════ */
-
-/*
-  ActionErrorToast
-  ─────────────────
-  Banner de error para acciones de fila (confirmar, no-show).
-  Aparece entre los filtros y la tabla.
-
-  Decisiones de diseño:
-  - Fondo rojo suave (no agresivo) con borde izquierdo rojo oscuro
-    para indicar error sin alarmar demasiado.
-  - Icono + texto + botón X en una sola línea.
-  - Animación slide-down para que el usuario note la aparición.
-  - Se cierra automáticamente a los 6s (controlado desde el componente).
-*/
-.action-error-toast {
+/* Botón limpiar (×) */
+.searchable-select__clear {
+  position: absolute;
+  right: 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px var(--spacing-md);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-left: 4px solid var(--color-error);
-  border-radius: var(--radius-md);
-  animation: toast-in 0.22s ease;
-}
-
-@keyframes toast-in {
-  from { transform: translateY(-8px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-.action-error-toast__icon {
-  color: var(--color-error);
-  flex-shrink: 0;
-}
-
-.action-error-toast__text {
-  flex: 1;
-  font-size: var(--text-sm);
-  color: #991b1b;
-  line-height: 1.45;
-}
-
-.action-error-toast__close {
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   background: none;
   border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #991b1b;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s, color 0.15s;
+  padding: 0;
+}
+.searchable-select__clear:hover {
+  background-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Chip de confirmación debajo del input */
+.searchable-select__chip {
   display: flex;
   align-items: center;
-  padding: 3px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-  transition: background-color 0.15s;
-  opacity: 0.7;
+  gap: 5px;
+  margin: 5px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.3;
 }
-.action-error-toast__close:hover {
-  background-color: #fecaca;
-  opacity: 1;
+.searchable-select__chip-icon  { color: #16a34a; flex-shrink: 0; }
+.searchable-select__chip-name  { font-weight: 600; color: var(--color-text-primary); }
+.searchable-select__chip-doc   { color: var(--color-text-secondary); }
+.searchable-select__chip-doc::before { content: '·'; margin-right: 4px; }
+
+/* Dropdown de resultados */
+.searchable-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Opción individual */
+.searchable-select__option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.1s;
+}
+.searchable-select__option:last-child { border-bottom: none; }
+.searchable-select__option--hover,
+.searchable-select__option:hover { background-color: var(--color-bg); }
+
+.searchable-select__option-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.searchable-select__option-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+/* Resaltado de búsqueda dentro de opciones */
+.ss-highlight {
+  background: rgba(99, 150, 230, 0.2);
+  border-radius: 2px;
+  padding: 0 2px;
+  font-style: normal;
+}
+
+/* Sin resultados */
+.searchable-select__empty {
+  padding: 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
 }

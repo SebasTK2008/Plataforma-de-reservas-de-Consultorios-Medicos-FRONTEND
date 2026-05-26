@@ -42,6 +42,7 @@ export async function updateDoctor(id, doctorData) {
   if (doctorData.fullName   !== undefined) payload.fullName   = doctorData.fullName;
   if (doctorData.email      !== undefined) payload.email      = doctorData.email;
   if (doctorData.specialtyId !== undefined) payload.specialtyId = doctorData.specialtyId;
+  if (doctorData.status      !== undefined) payload.status      = doctorData.status;
 
   const response = await api.patch(`/api/doctors/${id}`, payload);
   return response.data;
