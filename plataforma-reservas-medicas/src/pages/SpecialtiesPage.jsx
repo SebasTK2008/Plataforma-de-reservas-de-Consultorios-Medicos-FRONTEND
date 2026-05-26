@@ -1,17 +1,18 @@
-import { useState } from 'react';
+// SpecialtiesPage.jsx
+// CAMBIO: Se añade useEffect al SpecialtyModal para resetear el estado al abrir.
+// Mismo patrón que AppointmentTypesPage — corrige el bug de "saving infinito".
+
+import { useState, useEffect } from 'react';
 import {
   Plus, Stethoscope,
   AlertCircle, X, Save, Loader,
-  Search, Users,
+  Search,
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { useSpecialties } from '../Hooks/useSpecialties';
 import './SpecialtiesPage.css';
 
 
-// ─────────────────────────────────────────────────────────────
-// COLORES para las tarjetas (rotación visual)
-// ─────────────────────────────────────────────────────────────
 const CARD_COLORS = [
   { bg: '#eff6ff', icon: '#2563eb', border: '#bfdbfe' },
   { bg: '#f0fdf4', icon: '#16a34a', border: '#bbf7d0' },
@@ -22,15 +23,22 @@ const CARD_COLORS = [
 ];
 
 
-// ─────────────────────────────────────────────────────────────
-// COMPONENTE: SpecialtyModal
-// Solo modo CREAR — el backend no tiene endpoint de edición.
-// ─────────────────────────────────────────────────────────────
+// ── Modal: Crear especialidad ─────────────────────────────────
 function SpecialtyModal({ isOpen, onClose, onSubmit }) {
 
   const [form,   setForm]   = useState({ name: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState(null);
+
+  // ✅ FIX: useEffect para resetear estado al abrir el modal.
+  // Idéntico al patrón usado en AppointmentTypesPage.
+  useEffect(() => {
+    if (isOpen) {
+      setForm({ name: '', description: '' });
+      setError(null);
+      setSaving(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -47,7 +55,6 @@ function SpecialtyModal({ isOpen, onClose, onSubmit }) {
     const result = await onSubmit(form);
 
     if (result.success) {
-      setForm({ name: '', description: '' });
       onClose();
     } else {
       setError(result.error);
@@ -56,9 +63,8 @@ function SpecialtyModal({ isOpen, onClose, onSubmit }) {
   };
 
   const handleClose = () => {
-    setForm({ name: '', description: '' });
-    setError(null);
     onClose();
+    // El useEffect limpiará el form la próxima vez que isOpen = true
   };
 
   return (
@@ -136,19 +142,12 @@ function SpecialtyModal({ isOpen, onClose, onSubmit }) {
 }
 
 
-// ─────────────────────────────────────────────────────────────
-// COMPONENTE: SpecialtyCard
-// ─────────────────────────────────────────────────────────────
 function SpecialtyCard({ specialty, colorIndex }) {
   const color = CARD_COLORS[colorIndex % CARD_COLORS.length];
-
   return (
     <div
       className="specialty-card"
-      style={{
-        backgroundColor: color.bg,
-        borderColor: color.border,
-      }}
+      style={{ backgroundColor: color.bg, borderColor: color.border }}
     >
       <div className="specialty-card__icon" style={{ color: color.icon }}>
         <Stethoscope size={28} />
@@ -164,9 +163,6 @@ function SpecialtyCard({ specialty, colorIndex }) {
 }
 
 
-// ─────────────────────────────────────────────────────────────
-// COMPONENTE: CardSkeleton
-// ─────────────────────────────────────────────────────────────
 function CardSkeleton() {
   return (
     <div className="specialty-grid">
@@ -185,9 +181,6 @@ function CardSkeleton() {
 }
 
 
-// ─────────────────────────────────────────────────────────────
-// COMPONENTE PRINCIPAL: SpecialtiesPage
-// ─────────────────────────────────────────────────────────────
 function SpecialtiesPage() {
 
   const { specialties, loading, error, addSpecialty } = useSpecialties();
@@ -204,12 +197,10 @@ function SpecialtiesPage() {
 
   const handleSubmit = async (formData) => await addSpecialty(formData);
 
-
   return (
     <MainLayout pageTitle="Especialidades">
       <div className="specialties-page">
 
-        {/* ─── ENCABEZADO ─────────────────────────────────── */}
         <div className="page-header">
           <div>
             <h2 className="page-header__title">Especialidades Médicas</h2>
@@ -226,8 +217,6 @@ function SpecialtiesPage() {
           </button>
         </div>
 
-
-        {/* ─── BÚSQUEDA ────────────────────────────────────── */}
         {!loading && specialties.length > 0 && (
           <div className="search-bar">
             <Search size={17} className="search-bar__icon" />
@@ -246,8 +235,6 @@ function SpecialtiesPage() {
           </div>
         )}
 
-
-        {/* ─── ERROR ───────────────────────────────────────── */}
         {error && (
           <div className="alert alert--error">
             <AlertCircle size={18} />
@@ -255,11 +242,8 @@ function SpecialtiesPage() {
           </div>
         )}
 
-
-        {/* ─── CONTENIDO ───────────────────────────────────── */}
         {loading ? (
           <CardSkeleton />
-
         ) : filteredSpecialties.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">
@@ -282,7 +266,6 @@ function SpecialtiesPage() {
               </button>
             )}
           </div>
-
         ) : (
           <div className="specialty-grid">
             {filteredSpecialties.map((specialty, index) => (
@@ -295,8 +278,6 @@ function SpecialtiesPage() {
           </div>
         )}
 
-
-        {/* ─── MODAL ───────────────────────────────────────── */}
         <SpecialtyModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}

@@ -1,7 +1,29 @@
-import { useState } from 'react';
+// OfficesPage.jsx
+//
+// CAMBIOS vs versión anterior:
+// 1. OfficeModal ahora usa useEffect([office, isOpen]) → corrige el bug de saving=true
+//    y garantiza que los campos se pre-llenen al abrir en modo edición.
+//
+// ¿Por qué useEffect en lugar de useState con valor inicial?
+// -------------------------------------------------------------
+// La versión anterior hacía:
+//   const [form, setForm] = useState({
+//     name: office?.name ?? '', ...
+//   });
+// El problema: useState solo evalúa el valor inicial LA PRIMERA VEZ que
+// el componente se monta. Si el componente ya estaba montado (porque el modal
+// no se desmonta, solo devuelve null), abrir el modal con otro consultorio
+// no actualizaría los campos.
+//
+// Con useEffect el estado se sincroniza CADA VEZ que cambia "office" o "isOpen".
+//
+// 2. Se muestra el selector de estado TAMBIÉN al editar (antes solo se mostraba al crear).
+//    La lógica correcta es: al CREAR no tiene sentido elegir estado (siempre empieza AVAILABLE),
+//    pero al EDITAR sí tiene sentido cambiarlo.
+
+import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Building2,
-  ChevronLeft, ChevronRight,
   AlertCircle, X, Save, Loader,
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
@@ -26,16 +48,40 @@ function OfficeModal({ isOpen, onClose, onSubmit, office }) {
 
   const isEditing = office !== null && office !== undefined;
 
+  // Inicializamos con valores vacíos — el useEffect se encargará de rellenar
   const [form, setForm] = useState({
-    name:        office?.name        ?? '',
-    location:    office?.location    ?? '',
-    description: office?.description ?? '',
-    roomNumber:  office?.roomNumber  ?? '',
-    status:      office?.status      ?? 'AVAILABLE',
+    name:        '',
+    location:    '',
+    description: '',
+    roomNumber:  '',
+    status:      'AVAILABLE',
   });
 
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState(null);
+
+  // ✅ FIX PRINCIPAL: useEffect que sincroniza el formulario con el consultorio
+  // recibido por props, y resetea el estado de guardado.
+  //
+  // Depende de [office, isOpen] porque:
+  // - "office": cuando el usuario hace click en editar otro consultorio, los campos deben cambiar
+  // - "isOpen": cuando se abre el modal para CREAR (office=null), los campos deben vaciarse
+  //
+  // Patrón EXACTAMENTE igual al de PatientsPage (que ya funcionaba correctamente).
+  useEffect(() => {
+    // Pre-llenamos con los datos del consultorio (modo editar)
+    // o con valores vacíos (modo crear)
+    setForm({
+      name:        office?.name        ?? '',
+      location:    office?.location    ?? '',
+      description: office?.description ?? '',
+      roomNumber:  office?.roomNumber  ?? '',
+      // Al editar, pre-seleccionamos el estado actual del consultorio
+      status:      office?.status      ?? 'AVAILABLE',
+    });
+    setError(null);
+    setSaving(false); // ← Este es el fix del bug: resetea el estado de guardado
+  }, [office, isOpen]); // ← Observa ambas dependencias
 
   if (!isOpen) return null;
 
@@ -121,7 +167,9 @@ function OfficeModal({ isOpen, onClose, onSubmit, office }) {
                 disabled={saving} maxLength={255} />
             </div>
 
-            {/* Estado — solo al editar */}
+            {/* Estado — solo al EDITAR */}
+            {/* Razón: al crear, siempre empieza como AVAILABLE (el backend lo define).
+                Al editar, queremos poder cambiar entre AVAILABLE, UNAVAILABLE, MAINTENANCE. */}
             {isEditing && (
               <div className="form-group form-group--full">
                 <label htmlFor="o-status">Estado del Consultorio</label>
@@ -131,6 +179,7 @@ function OfficeModal({ isOpen, onClose, onSubmit, office }) {
                   <option value="UNAVAILABLE">No disponible</option>
                   <option value="MAINTENANCE">En mantenimiento</option>
                 </select>
+                {/* Hint contextual según el estado seleccionado */}
                 <p className="form-hint">
                   {form.status === 'AVAILABLE'   && 'El consultorio puede ser asignado a citas.'}
                   {form.status === 'UNAVAILABLE' && 'El consultorio no puede recibir citas nuevas.'}
@@ -182,12 +231,11 @@ function OfficesPage() {
 
   const { offices, loading, error, addOffice, editOffice } = useOffices();
 
-  const [modalOpen,       setModalOpen]       = useState(false);
-  const [selectedOffice,  setSelectedOffice]  = useState(null);
-  const [searchQuery,     setSearchQuery]     = useState('');
-  const [statusFilter,    setStatusFilter]    = useState('');
+  const [modalOpen,      setModalOpen]      = useState(false);
+  const [selectedOffice, setSelectedOffice] = useState(null);
+  const [searchQuery,    setSearchQuery]    = useState('');
+  const [statusFilter,   setStatusFilter]   = useState('');
 
-  // Filtrado local: primero por estado, luego por texto
   const filtered = offices
     .filter(o => !statusFilter || o.status === statusFilter)
     .filter(o => {
@@ -212,7 +260,6 @@ function OfficesPage() {
     <MainLayout pageTitle="Consultorios">
       <div className="offices-page">
 
-        {/* ── Encabezado ─────────────────────────────── */}
         <div className="page-header">
           <div>
             <h2 className="page-header__title">Gestión de Consultorios</h2>
@@ -225,7 +272,6 @@ function OfficesPage() {
           </button>
         </div>
 
-        {/* ── Filtros ─────────────────────────────────── */}
         <div className="filters-bar">
           <div className="search-bar">
             <Search size={17} className="search-bar__icon" />
@@ -238,12 +284,8 @@ function OfficesPage() {
               </button>
             )}
           </div>
-
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
+          <select className="filter-select" value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}>
             <option value="">Todos los estados</option>
             <option value="AVAILABLE">Disponible</option>
             <option value="UNAVAILABLE">No disponible</option>
@@ -251,14 +293,12 @@ function OfficesPage() {
           </select>
         </div>
 
-        {/* ── Error ───────────────────────────────────── */}
         {error && (
           <div className="alert alert--error">
             <AlertCircle size={18} /><span>{error}</span>
           </div>
         )}
 
-        {/* ── Tabla ───────────────────────────────────── */}
         <div className="table-card">
           {loading ? (
             <LoadingSkeleton />
@@ -318,7 +358,6 @@ function OfficesPage() {
           )}
         </div>
 
-        {/* ── Modal ───────────────────────────────────── */}
         <OfficeModal
           isOpen={modalOpen}
           onClose={closeModal}

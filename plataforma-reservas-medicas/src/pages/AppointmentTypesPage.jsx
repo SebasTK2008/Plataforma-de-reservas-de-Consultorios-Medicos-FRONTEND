@@ -1,4 +1,13 @@
-import { useState } from 'react';
+// AppointmentTypesPage.jsx
+// CAMBIO CLAVE: Se añade useEffect al AppointmentTypeModal
+// para resetear "saving", "error" y "form" cada vez que se abre.
+//
+// ¿Por qué es necesario?
+// Sin useEffect, si el usuario intenta crear, el backend devuelve error,
+// el usuario cierra el modal... "saving" queda en su valor anterior (true).
+// La próxima vez que abran el modal aparece bloqueado sin razón.
+
+import { useState, useEffect } from 'react';
 import {
   Plus, Clock, Search, AlertCircle,
   X, Save, Loader, FileText,
@@ -8,10 +17,6 @@ import { useAppointmentTypes } from '../hooks/useAppointmentTypes';
 import './AppointmentTypesPage.css';
 
 
-// ── Helper: formatea minutos a texto legible ──────────────────
-// 30  → "30 min"
-// 60  → "1 h"
-// 90  → "1 h 30 min"
 function formatDuration(minutes) {
   if (!minutes) return '—';
   if (minutes < 60) return `${minutes} min`;
@@ -20,14 +25,10 @@ function formatDuration(minutes) {
   return m > 0 ? `${h} h ${m} min` : `${h} h`;
 }
 
-
-// ── Badge de duración ─────────────────────────────────────────
 function DurationBadge({ minutes }) {
-  // Color según la duración para identificar visualmente
-  let cls = 'duration-badge--short';   // < 30 min
-  if (minutes >= 30 && minutes < 60) cls = 'duration-badge--medium';  // 30–59 min
-  if (minutes >= 60)                 cls = 'duration-badge--long';    // ≥ 1 hora
-
+  let cls = 'duration-badge--short';
+  if (minutes >= 30 && minutes < 60) cls = 'duration-badge--medium';
+  if (minutes >= 60)                 cls = 'duration-badge--long';
   return (
     <span className={`duration-badge ${cls}`}>
       <Clock size={11} />
@@ -38,8 +39,6 @@ function DurationBadge({ minutes }) {
 
 
 // ── Modal: crear tipo de cita ─────────────────────────────────
-// El backend no tiene endpoint de edición (PUT/PATCH para tipos de cita),
-// por eso este modal solo sirve para CREAR.
 function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
 
   const [form, setForm] = useState({
@@ -49,6 +48,27 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
   });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState(null);
+
+  // ✅ FIX PRINCIPAL: useEffect que resetea el estado cuando cambia isOpen.
+  //
+  // Cuando "isOpen" pasa de false → true (usuario abre el modal),
+  // este efecto se ejecuta y:
+  //   1. Limpia el formulario (campos vacíos)
+  //   2. Borra errores anteriores
+  //   3. Resetea "saving" a false (aquí estaba el bug)
+  //
+  // Sin esto: si saving quedaba en true por un guardado fallido,
+  // al reabrir el modal los botones aparecían desactivados.
+  //
+  // La condición "if (isOpen)" evita limpiar el formulario al cerrar
+  // (cuando isOpen pasa a false), lo cual no haría daño pero es más limpio.
+  useEffect(() => {
+    if (isOpen) {
+      setForm({ name: '', description: '', durationMinutes: '' });
+      setError(null);
+      setSaving(false);
+    }
+  }, [isOpen]); // Se ejecuta cada vez que isOpen cambia
 
   if (!isOpen) return null;
 
@@ -60,7 +80,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validaciones del lado cliente
     if (!form.name.trim())
       return setError('El nombre del tipo de cita es requerido.');
 
@@ -76,12 +95,12 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
     const result = await onSubmit(form);
 
     if (result.success) {
-      // Limpiamos el form para el próximo uso
-      setForm({ name: '', description: '', durationMinutes: '' });
       onClose();
+      // No necesitamos resetear el form aquí porque el useEffect
+      // lo hará la próxima vez que isOpen se ponga en true.
     } else {
       setError(result.error);
-      setSaving(false);
+      setSaving(false); // ← Siempre resetear en caso de error
     }
   };
 
@@ -105,14 +124,13 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="modal__form">
           <div className="form-grid">
 
-            {/* Nombre */}
             <div className="form-group form-group--full">
               <label htmlFor="t-name">Nombre del Tipo de Cita *</label>
               <input
                 id="t-name"
                 name="name"
                 type="text"
-                placeholder="Ej: Consulta General, Psicología, Fisioterapia..."
+                placeholder="Ej: Consulta General, Psicología..."
                 value={form.name}
                 onChange={handleChange}
                 disabled={saving}
@@ -120,7 +138,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
               />
             </div>
 
-            {/* Duración */}
             <div className="form-group">
               <label htmlFor="t-duration">Duración (minutos) *</label>
               <input
@@ -134,7 +151,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
                 min={1}
                 max={480}
               />
-              {/* Preview de la duración mientras escribe */}
               {form.durationMinutes && Number(form.durationMinutes) > 0 && (
                 <p className="form-hint">
                   Equivale a: <strong>{formatDuration(Number(form.durationMinutes))}</strong>
@@ -142,7 +158,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
               )}
             </div>
 
-            {/* Descripción (ocupa la otra columna o se extiende) */}
             <div className="form-group">
               <label htmlFor="t-desc">
                 Descripción
@@ -152,7 +167,7 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
                 id="t-desc"
                 name="description"
                 type="text"
-                placeholder="Ej: Consulta médica de rutina con historia clínica"
+                placeholder="Ej: Consulta médica de rutina"
                 value={form.description}
                 onChange={handleChange}
                 disabled={saving}
@@ -162,7 +177,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
 
           </div>
 
-          {/* Nota informativa */}
           <div className="modal__note">
             <FileText size={14} />
             <span>
@@ -191,7 +205,6 @@ function AppointmentTypeModal({ isOpen, onClose, onSubmit }) {
 }
 
 
-// ── Skeleton de carga ─────────────────────────────────────────
 function LoadingSkeleton() {
   return (
     <div className="skeleton-table">
@@ -208,7 +221,6 @@ function LoadingSkeleton() {
 }
 
 
-// ── Página principal ──────────────────────────────────────────
 function AppointmentTypesPage() {
 
   const {
@@ -221,7 +233,6 @@ function AppointmentTypesPage() {
   const [modalOpen,   setModalOpen]   = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filtrado local por nombre o descripción
   const filtered = searchQuery.trim()
     ? appointmentTypes.filter(t => {
         const q = searchQuery.toLowerCase();
@@ -237,7 +248,6 @@ function AppointmentTypesPage() {
     <MainLayout pageTitle="Tipos de Cita">
       <div className="appt-types-page">
 
-        {/* ── Encabezado ─────────────────────────────────── */}
         <div className="page-header">
           <div>
             <h2 className="page-header__title">Tipos de Cita</h2>
@@ -253,7 +263,6 @@ function AppointmentTypesPage() {
           </button>
         </div>
 
-        {/* ── Búsqueda ────────────────────────────────────── */}
         <div className="search-bar">
           <Search size={17} className="search-bar__icon" />
           <input
@@ -264,25 +273,21 @@ function AppointmentTypesPage() {
             className="search-bar__input"
           />
           {searchQuery && (
-            <button className="search-bar__clear"
-              onClick={() => setSearchQuery('')}>
+            <button className="search-bar__clear" onClick={() => setSearchQuery('')}>
               <X size={16} />
             </button>
           )}
         </div>
 
-        {/* ── Error ───────────────────────────────────────── */}
         {error && (
           <div className="alert alert--error">
             <AlertCircle size={18} /><span>{error}</span>
           </div>
         )}
 
-        {/* ── Tabla ───────────────────────────────────────── */}
         <div className="table-card">
           {loading ? (
             <LoadingSkeleton />
-
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">
@@ -299,13 +304,11 @@ function AppointmentTypesPage() {
                   : 'Los tipos de cita definen la duración de cada consulta.'}
               </p>
               {!searchQuery && (
-                <button className="btn btn--primary"
-                  onClick={() => setModalOpen(true)}>
+                <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
                   <Plus size={16} /> Crear primer tipo
                 </button>
               )}
             </div>
-
           ) : (
             <div className="table-wrapper">
               <table className="data-table">
@@ -319,29 +322,20 @@ function AppointmentTypesPage() {
                 <tbody>
                   {filtered.map(type => (
                     <tr key={type.id}>
-
-                      {/* Icono + nombre */}
                       <td>
                         <div className="type-cell">
                           <div className="type-cell__icon">
                             <FileText size={18} />
                           </div>
-                          <span className="type-cell__name">
-                            {type.name}
-                          </span>
+                          <span className="type-cell__name">{type.name}</span>
                         </div>
                       </td>
-
-                      {/* Badge de duración con color según rango */}
                       <td>
                         <DurationBadge minutes={type.durationMinutes} />
                       </td>
-
-                      {/* Descripción */}
                       <td className="td--muted">
                         {type.description || '—'}
                       </td>
-
                     </tr>
                   ))}
                 </tbody>
@@ -350,7 +344,6 @@ function AppointmentTypesPage() {
           )}
         </div>
 
-        {/* ── Modal ───────────────────────────────────────── */}
         <AppointmentTypeModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
