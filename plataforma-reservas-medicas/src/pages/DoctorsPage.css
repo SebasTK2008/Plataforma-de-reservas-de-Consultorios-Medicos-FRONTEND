@@ -169,3 +169,15 @@
   .schedule-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
   .schedule-remove-btn { grid-column: 2; justify-self: end; }
 }
+
+.doctors-filters {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+/* El search-bar ocupa el espacio disponible */
+.doctors-filters .search-bar {
+  flex: 1;
+  min-width: 200px;
+}

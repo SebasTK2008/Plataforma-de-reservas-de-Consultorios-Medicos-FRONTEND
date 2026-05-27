@@ -1,125 +1,73 @@
-/* ===== TOPBAR ===== */
+/* Topbar.css
+   ─────────────────────────────────────────────────────────────
+   Barra superior de la aplicación.
+   Muestra el título de la página y la info del usuario autenticado.
+   ─────────────────────────────────────────────────────────────
+*/
+
 .topbar {
-  height: 64px;
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--spacing-xl);
+  height: 64px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  position: sticky;   /* Se queda arriba al hacer scroll */
+  position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
+  flex-shrink: 0;
 }
 
-/* --- Título --- */
+/* ── Título de la página ─────────────────────────────────── */
 .topbar__title h1 {
   font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-/* --- Acciones --- */
-.topbar__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-/* --- Buscador --- */
-.topbar__search {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: var(--spacing-xs) var(--spacing-md);
-}
-
-.topbar__search input {
-  border: none;
-  background: none;
-  outline: none;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  width: 180px;
-}
-
-.topbar__search input::placeholder {
-  color: var(--color-text-secondary);
-}
-
-/* --- Botón de icono (notificaciones) --- */
-.topbar__icon-btn {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  transition: all 0.2s ease;
-}
-
-.topbar__icon-btn:hover {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-/* Badge de notificaciones */
-.topbar__badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 18px;
-  height: 18px;
-  background-color: var(--color-error);
-  color: white;
-  font-size: 10px;
   font-weight: 700;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1;
 }
 
-/* --- Usuario --- */
+/* ── Bloque de usuario ───────────────────────────────────── */
 .topbar__user {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  cursor: pointer;
 }
 
+/* Avatar circular con iniciales */
 .topbar__avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
-  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.topbar__avatar span {
-  font-size: var(--text-xs);
+  flex-shrink: 0;
   font-weight: 700;
-  color: white;
+  font-size: var(--text-sm);
   font-family: var(--font-heading);
+  color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
+/*
+  Colores por rol — cada rol tiene su propio color
+  para que el usuario pueda identificar su perfil de un vistazo.
+*/
+.avatar--admin       { background-color: var(--color-primary); }
+.avatar--staff       { background-color: #0891b2; } /* cyan-600  */
+.avatar--doctor      { background-color: #059669; } /* emerald-600 */
+.avatar--coordinator { background-color: #7c3aed; } /* violet-600 */
+.avatar--default     { background-color: var(--color-text-secondary); }
+
+/* Nombre y rol del usuario */
 .topbar__user-info {
   display: flex;
   flex-direction: column;
+  gap: 1px;
+  text-align: right;
 }
 
 .topbar__user-name {
@@ -127,9 +75,26 @@
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 1.2;
+  /* Truncar si el nombre es muy largo */
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar__user-role {
   font-size: var(--text-xs);
   color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .topbar {
+    padding: 0 var(--spacing-md);
+  }
+  /* En móvil ocultamos el texto y dejamos solo el avatar */
+  .topbar__user-info {
+    display: none;
+  }
 }

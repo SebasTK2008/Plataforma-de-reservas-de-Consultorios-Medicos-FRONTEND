@@ -10,6 +10,7 @@ import SpecialtiesPage               from './pages/SpecialtiesPage';
 import OfficesPage                   from './pages/OfficesPage';
 import AvailabilityPage                 from './pages/AvailabilityPage';
 import ReportsPage                   from './pages/ReportsPage';
+import UsersPage                     from './pages/UsersPage'; 
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/offices"           element={<PrivateRoute><OfficesPage /></PrivateRoute>} />
       <Route path="/availability"         element={<PrivateRoute><AvailabilityPage /></PrivateRoute>} />
       <Route path="/reports"           element={<PrivateRoute><ReportsPage /></PrivateRoute>} />
+      <Route path="/users"             element={<PrivateRoute><UsersPage /></PrivateRoute>} />
 
       <Route path="/"  element={<Navigate to="/dashboard" replace />} />
       <Route path="*"  element={<Navigate to="/dashboard" replace />} />

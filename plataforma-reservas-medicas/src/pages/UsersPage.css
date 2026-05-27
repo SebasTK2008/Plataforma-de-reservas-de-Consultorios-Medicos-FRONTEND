@@ -1,0 +1,331 @@
+/* UsersPage.css
+   Solo estilos específicos de esta página.
+   Clases compartidas (.btn, .alert, .form-group, etc.) viven en components.css
+*/
+
+.users-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  max-width: 680px; /* El formulario no necesita todo el ancho */
+}
+
+/* Ícono decorativo del encabezado */
+.users-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BANNER DE ÉXITO
+   ══════════════════════════════════════════════════════════ */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-left: 4px solid #16a34a;
+  border-radius: var(--radius-md);
+  animation: toast-in 0.22s ease;
+}
+
+@keyframes toast-in {
+  from { transform: translateY(-6px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.success-banner__icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.success-banner__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.success-banner__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #15803d;
+}
+
+.success-banner__sub {
+  font-size: var(--text-xs);
+  color: #166534;
+}
+
+.success-banner__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #16a34a;
+  font-size: var(--text-lg);
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s;
+}
+.success-banner__close:hover { background-color: #dcfce7; }
+
+
+/* ══════════════════════════════════════════════════════════
+   CARD DEL FORMULARIO
+   ══════════════════════════════════════════════════════════ */
+.users-form-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.users-form-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.users-form-card__icon {
+  color: var(--color-primary);
+}
+
+.users-form {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Reutilizamos .form-group de components.css */
+/* Solo necesitamos el input base aquí */
+.users-form input[type="text"],
+.users-form input[type="password"] {
+  height: 42px;
+  padding: 0 var(--spacing-sm);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.users-form input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.users-form input:disabled {
+  background-color: var(--color-bg);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* ── Input de contraseña con botón de ojo ─────────────── */
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 42px; /* Espacio para el botón */
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.password-toggle:hover { color: var(--color-text-primary); }
+
+/* ── Indicador de fortaleza de contraseña ─────────────── */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: 6px;
+}
+
+.password-strength__bar {
+  height: 4px;
+  border-radius: var(--radius-full);
+  flex: 1;
+  transition: background-color 0.3s, width 0.3s;
+}
+
+.password-strength span {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* Niveles de fortaleza */
+.password-strength--weak  .password-strength__bar { background-color: #ef4444; width: 25%; }
+.password-strength--weak  span { color: #ef4444; }
+
+.password-strength--fair  .password-strength__bar { background-color: #f97316; width: 50%; }
+.password-strength--fair  span { color: #f97316; }
+
+.password-strength--ok    .password-strength__bar { background-color: #eab308; width: 75%; }
+.password-strength--ok    span { color: #a16207; }
+
+.password-strength--strong .password-strength__bar { background-color: #16a34a; width: 100%; }
+.password-strength--strong span { color: #15803d; }
+
+
+/* ══════════════════════════════════════════════════════════
+   TARJETAS DE ROL
+   ══════════════════════════════════════════════════════════ */
+.role-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.1s;
+  font-family: var(--font-body);
+}
+.role-card:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+.role-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.role-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.role-card__label {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.role-card__check {
+  flex-shrink: 0;
+}
+
+.role-card__desc {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Colores por rol ──────────────────────────────────── */
+/* Seleccionado: borde e ícono del color del rol */
+
+.role-card.role--admin.role-card--selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+.role-card.role--admin.role-card--selected .role-card__label { color: var(--color-primary); }
+.role-card.role--admin.role-card--selected .role-card__check { color: var(--color-primary); }
+
+.role-card.role--staff.role-card--selected {
+  border-color: #0891b2;
+  background-color: #ecfeff;
+}
+.role-card.role--staff.role-card--selected .role-card__label { color: #0e7490; }
+.role-card.role--staff.role-card--selected .role-card__check { color: #0891b2; }
+
+.role-card.role--doctor.role-card--selected {
+  border-color: #059669;
+  background-color: #ecfdf5;
+}
+.role-card.role--doctor.role-card--selected .role-card__label { color: #047857; }
+.role-card.role--doctor.role-card--selected .role-card__check { color: #059669; }
+
+.role-card.role--coordinator.role-card--selected {
+  border-color: #7c3aed;
+  background-color: #f5f3ff;
+}
+.role-card.role--coordinator.role-card--selected .role-card__label { color: #6d28d9; }
+.role-card.role--coordinator.role-card--selected .role-card__check { color: #7c3aed; }
+
+/* ── Pie del formulario ──────────────────────────────── */
+.users-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ══════════════════════════════════════════════════════════
+   NOTA INFORMATIVA
+   ══════════════════════════════════════════════════════════ */
+.users-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.users-info-note svg {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.users-info-note p {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 520px) {
+  .role-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .users-page {
+    max-width: 100%;
+  }
+}

@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { to: '/offices',           icon: Building2,       label: 'Consultorios'    },
   { to: '/availability',      icon: ClipboardList,   label: 'Disponibilidad'        },
   { to: '/reports',           icon: BarChart3,       label: 'Reportes'        },
+  { to: '/users',             icon: Users,           label: 'Administrar usuarios'        },
 ];
 
 function Sidebar() {

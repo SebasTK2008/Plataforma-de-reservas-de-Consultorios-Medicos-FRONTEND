@@ -101,6 +101,7 @@ function AvailabilityModal({ isOpen, onClose, doctor }) {
   // ¿Ya se hizo al menos una consulta? Para distinguir "no buscado" de "sin resultados"
   const [searched, setSearched] = useState(false);
 
+
   // Limpiar al cerrar el modal para que la próxima vez empiece limpio
   useEffect(() => {
     if (!isOpen) {
@@ -582,17 +583,19 @@ function DoctorsPage() {
   const [selectedDoctor,      setSelectedDoctor]      = useState(null);
   const [availabilityDoctor,  setAvailabilityDoctor]  = useState(null); // Doctor para el modal de disponibilidad
   const [searchQuery,         setSearchQuery]         = useState('');
-
-  const filteredDoctors = searchQuery.trim()
-    ? doctors.filter(d => {
-        const q = searchQuery.toLowerCase();
-        return (
-          d.fullName?.toLowerCase().includes(q) ||
-          d.email?.toLowerCase().includes(q) ||
-          d.specialty?.name?.toLowerCase().includes(q)
-        );
-      })
-    : doctors;
+  const [statusFilter,        setStatusFilter]        = useState('');
+  const filteredDoctors = doctors.filter(d => {
+    const matchesSearch = !searchQuery.trim() || (() => {
+      const q = searchQuery.toLowerCase();
+      return (
+        d.fullName?.toLowerCase().includes(q) ||
+        d.email?.toLowerCase().includes(q) ||
+        d.specialty?.name?.toLowerCase().includes(q)
+      );
+    })();
+    const matchesStatus = !statusFilter || d.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const openCreate = () => { setSelectedDoctor(null); setModalOpen(true); };
   const openEdit   = (d) => { setSelectedDoctor(d);   setModalOpen(true); };
@@ -622,18 +625,30 @@ function DoctorsPage() {
           </button>
         </div>
 
-        <div className="search-bar">
-          <Search size={17} className="search-bar__icon" />
-          <input type="text"
-            placeholder="Buscar por nombre, email o especialidad..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="search-bar__input" />
-          {searchQuery && (
-            <button className="search-bar__clear" onClick={() => setSearchQuery('')}>
-              <X size={16} />
-            </button>
-          )}
+        <div className="doctors-filters">
+          <div className="search-bar">
+            <Search size={17} className="search-bar__icon" />
+            <input type="text"
+              placeholder="Buscar por nombre, email o especialidad..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="search-bar__input" />
+            {searchQuery && (
+              <button className="search-bar__clear" onClick={() => setSearchQuery('')}>
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="INACTIVE">Inactivos</option>
+          </select>
         </div>
 
         {error && (

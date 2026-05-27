@@ -14,7 +14,7 @@ function PrivateRoute({ children }) {
   // "replace" reemplaza la entrada en el historial
   // (así el botón "atrás" no vuelve a la página protegida)
   if (!isAuthenticated) { //RECORDAR AGREGARLE LA NEGACION PARA QUE FUNCIONE CORRECTAMENTE
-    return <Navigate to="/login" replace />;
+   return <Navigate to="/login" replace />;
     //return children;
   }
 
