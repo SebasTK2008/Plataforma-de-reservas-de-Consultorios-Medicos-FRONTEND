@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
 import PrivateRoute from './components/layout/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -12,17 +13,41 @@ import AvailabilityPage from './pages/AvailabilityPage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 
+// Ruta de inicio según el rol del usuario.
+// El orden importa: se usa el primer match.
+const HOME_BY_ROLE = [
+  { role: 'ROLE_DOCTOR',      path: '/appointments' },
+  { role: 'ROLE_COORDINATOR', path: '/dashboard'    },
+  { role: 'ROLE_STAFF',       path: '/dashboard'    },
+  { role: 'ROLE_ADMIN',       path: '/dashboard'    },
+];
+
+function getHomeFor(roles = []) {
+  const match = HOME_BY_ROLE.find((entry) => roles.includes(entry.role));
+  return match ? match.path : '/dashboard';
+}
+
+function DefaultRedirect() {
+  const { user } = useAuth();
+  const roles = Array.isArray(user?.roles)
+    ? user.roles
+    : user?.roles
+    ? [user.roles]
+    : [];
+  return <Navigate to={getHomeFor(roles)} replace />;
+}
+
 const privateRoutes = [
-  { path: '/dashboard', element: <DashboardPage /> },
-  { path: '/patients', element: <PatientsPage /> },
-  { path: '/doctors', element: <DoctorsPage /> },
-  { path: '/appointments', element: <AppointmentsPage /> },
+  { path: '/dashboard',         element: <DashboardPage />        },
+  { path: '/patients',          element: <PatientsPage />         },
+  { path: '/doctors',           element: <DoctorsPage />          },
+  { path: '/appointments',      element: <AppointmentsPage />     },
   { path: '/appointment-types', element: <AppointmentTypesPage /> },
-  { path: '/specialties', element: <SpecialtiesPage /> },
-  { path: '/offices', element: <OfficesPage /> },
-  { path: '/availability', element: <AvailabilityPage /> },
-  { path: '/reports', element: <ReportsPage /> },
-  { path: '/users', element: <UsersPage /> },
+  { path: '/specialties',       element: <SpecialtiesPage />      },
+  { path: '/offices',           element: <OfficesPage />          },
+  { path: '/availability',      element: <AvailabilityPage />     },
+  { path: '/reports',           element: <ReportsPage />          },
+  { path: '/users',             element: <UsersPage />            },
 ];
 
 function App() {
@@ -38,8 +63,9 @@ function App() {
         />
       ))}
 
-      <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-      <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+      {/* "/" y cualquier ruta desconocida redirigen según el rol */}
+      <Route path="/"  element={<PrivateRoute><DefaultRedirect /></PrivateRoute>} />
+      <Route path="*"  element={<PrivateRoute><DefaultRedirect /></PrivateRoute>} />
     </Routes>
   );
 }

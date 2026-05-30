@@ -1,10 +1,4 @@
-﻿// DashboardPage.jsx
-// Dashboard adaptado por rol:
-//
-//   ADMIN       → ve todo: pacientes, citas del día y ranking de doctores
-//   COORDINATOR → solo ve el ranking de productividad (su función central)
-
-import { useEffect, useMemo } from 'react';
+﻿import { useEffect, useMemo } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import {
   Users, UserRound, Calendar, CalendarCheck,
@@ -19,7 +13,6 @@ import './DashboardPage.css';
 
 function formatDate(dateString) {
   if (!dateString) return '—';
-
   return new Date(dateString).toLocaleString('es-CO', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -28,7 +21,11 @@ function formatDate(dateString) {
 
 function DashboardPage() {
   const { user } = useAuth();
-  const roles = useMemo(() => user?.roles ?? [], [user?.roles]);
+  const roles = useMemo(() => {
+    if (!user?.roles) return [];
+    return Array.isArray(user.roles) ? user.roles : [user.roles];
+  }, [user?.roles]);
+
   const {
     stats,
     recentAppointments,
@@ -56,7 +53,6 @@ function DashboardPage() {
               </p>
             )}
           </div>
-
           <button
             className="btn btn--secondary"
             onClick={loadDashboardData}
@@ -76,16 +72,17 @@ function DashboardPage() {
 
         {canSeeOperations(roles) && (
           <div className="dashboard__stats">
+            {/* Campos que devuelve DashboardResponse del backend */}
             <StatCard
-              title="Total Pacientes"
-              value={stats.totalPatients}
+              title="Pacientes activos"
+              value={stats.activePatients}
               icon={Users}
               variant="blue"
               loading={loading}
               subtitle="Registrados en el sistema"
             />
             <StatCard
-              title="Citas Hoy"
+              title="Citas hoy"
               value={stats.todayAppointments}
               icon={Calendar}
               variant="purple"
@@ -94,15 +91,15 @@ function DashboardPage() {
             />
             <StatCard
               title="Pendientes"
-              value={stats.scheduledAppointments}
+              value={stats.todayScheduledAppointments}
               icon={Clock}
               variant="orange"
               loading={loading}
               subtitle="Sin confirmar hoy"
             />
             <StatCard
-              title="Completadas Hoy"
-              value={stats.completedToday}
+              title="Completadas hoy"
+              value={stats.todayCompletedAppointments}
               icon={CalendarCheck}
               variant="green"
               loading={loading}
@@ -120,8 +117,8 @@ function DashboardPage() {
 
               {loading ? (
                 <div className="table-skeleton">
-                  {[1, 2, 3, 4, 5].map((index) => (
-                    <div key={index} className="table-skeleton__row" />
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="table-skeleton__row" />
                   ))}
                 </div>
               ) : recentAppointments.length === 0 ? (
@@ -142,16 +139,12 @@ function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentAppointments.map((appointment) => (
-                        <tr key={appointment.id}>
-                          <td>
-                            <span className="table__patient-name">
-                              {appointment.patient?.fullName ?? '—'}
-                            </span>
-                          </td>
-                          <td>{appointment.doctor?.fullName ?? '—'}</td>
-                          <td className="table__date">{formatDate(appointment.startAt)}</td>
-                          <td><StatusBadge status={appointment.status} /></td>
+                      {recentAppointments.map((appt) => (
+                        <tr key={appt.id}>
+                          <td>{appt.patient?.fullName ?? '—'}</td>
+                          <td>{appt.doctor?.fullName ?? '—'}</td>
+                          <td className="table__date">{formatDate(appt.startAt)}</td>
+                          <td><StatusBadge status={appt.status} /></td>
                         </tr>
                       ))}
                     </tbody>
@@ -170,14 +163,14 @@ function DashboardPage() {
 
               {loading ? (
                 <div className="table-skeleton">
-                  {[1, 2, 3, 4, 5].map((index) => (
-                    <div key={index} className="table-skeleton__row" />
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="table-skeleton__row" />
                   ))}
                 </div>
               ) : topDoctors.length === 0 ? (
                 <EmptyState
                   icon={UserRound}
-                  title="Sin datos de productividad"
+                  title="Sin datos"
                   description="No hay datos de productividad disponibles"
                 />
               ) : (

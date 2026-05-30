@@ -1,20 +1,43 @@
 import { useState, useCallback } from 'react';
-import { getPatients } from '../api/patientsApi';
-import { getTodayAppointments, getRecentAppointments } from '../api/appointmentsApi';
+import { getDashboardStats } from '../api/dashboardApi';
+import { getRecentAppointments } from '../api/appointmentsApi';
 import { getDoctorProductivity } from '../api/reportsApi';
+
+// Qué puede ver cada rol:
+//   ADMIN       → stats operativas + citas recientes + ranking doctores
+//   COORDINATOR → solo ranking de doctores (reportes)
+//   STAFF       → stats operativas + citas recientes (no ranking)
+//
+// El endpoint /api/dashboard ya acepta ADMIN, COORDINATOR y STAFF
+// según SecurityConfig. No necesitamos guardarlo por rol en el frontend;
+// el backend devuelve los mismos campos para todos.
 
 const ROLE_ADMIN = 'ROLE_ADMIN';
 const ROLE_COORDINATOR = 'ROLE_COORDINATOR';
+const ROLE_STAFF = 'ROLE_STAFF';
 
-export const canSeeOperations = (roles) => roles.includes(ROLE_ADMIN);
-export const canSeeReports = (roles) => roles.includes(ROLE_ADMIN) || roles.includes(ROLE_COORDINATOR);
+export const canSeeOperations = (roles) =>
+  roles.includes(ROLE_ADMIN) ||
+  roles.includes(ROLE_STAFF) ||
+  roles.includes(ROLE_COORDINATOR);
+
+export const canSeeReports = (roles) =>
+  roles.includes(ROLE_ADMIN) || roles.includes(ROLE_COORDINATOR);
+
+// Devuelve hoy en formato YYYY-MM-DD que espera el backend
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export function useDashboardData(roles = []) {
   const [stats, setStats] = useState({
-    totalPatients: null,
+    activeDoctors: null,
+    inactiveDoctors: null,
+    activePatients: null,
+    inactivePatients: null,
     todayAppointments: null,
-    scheduledAppointments: null,
-    completedToday: null,
+    todayCompletedAppointments: null,
+    todayScheduledAppointments: null,
   });
   const [recentAppointments, setRecentAppointments] = useState([]);
   const [topDoctors, setTopDoctors] = useState([]);
@@ -26,58 +49,51 @@ export function useDashboardData(roles = []) {
     setLoading(true);
     setError(null);
 
-    try {
-      const promises = [];
-      const keys = [];
+    const promises = [];
+    const keys = [];
 
-      if (canSeeOperations(roles)) {
-        promises.push(getPatients(0, 1));
-        promises.push(getTodayAppointments());
-        promises.push(getRecentAppointments());
-        keys.push('patients', 'today', 'recent');
-      }
+    // Todos los roles con acceso al dashboard pueden pedir el endpoint principal
+    promises.push(getDashboardStats(todayISO()));
+    keys.push('dashboard');
 
-      if (canSeeReports(roles)) {
-        promises.push(getDoctorProductivity());
-        keys.push('productivity');
-      }
-
-      const results = await Promise.allSettled(promises);
-      const data = {};
-
-      keys.forEach((key, index) => {
-        if (results[index].status === 'fulfilled') {
-          data[key] = results[index].value;
-        } else {
-          console.warn(`Dashboard: fallo al cargar '${key}'`, results[index].reason);
-          data[key] = null;
-        }
-      });
-
-      if (canSeeOperations(roles)) {
-        const todayContent = data.today?.content ?? [];
-
-        setStats({
-          totalPatients: data.patients?.totalElements ?? null,
-          todayAppointments: data.today?.totalElements ?? null,
-          scheduledAppointments: todayContent.filter((appointment) => appointment.status === 'SCHEDULED').length || null,
-          completedToday: todayContent.filter((appointment) => appointment.status === 'COMPLETED').length || null,
-        });
-
-        setRecentAppointments(data.recent?.content ?? []);
-      }
-
-      if (canSeeReports(roles)) {
-        setTopDoctors((data.productivity ?? []).slice(0, 5));
-      }
-
-      setLastUpdated(new Date().toLocaleTimeString('es-CO'));
-    } catch (fetchError) {
-      console.error('Dashboard data load failed:', fetchError);
-      setError('No se pudieron cargar los datos del dashboard.');
-    } finally {
-      setLoading(false);
+    if (canSeeOperations(roles)) {
+      promises.push(getRecentAppointments());
+      keys.push('recent');
     }
+
+    if (canSeeReports(roles)) {
+      promises.push(getDoctorProductivity());
+      keys.push('productivity');
+    }
+
+    const results = await Promise.allSettled(promises);
+    const data = {};
+
+    keys.forEach((key, index) => {
+      if (results[index].status === 'fulfilled') {
+        data[key] = results[index].value;
+      } else {
+        console.warn(`Dashboard: fallo al cargar '${key}'`, results[index].reason);
+        data[key] = null;
+      }
+    });
+
+    if (data.dashboard) {
+      setStats(data.dashboard);
+    } else {
+      setError('No se pudieron cargar los datos del dashboard.');
+    }
+
+    if (canSeeOperations(roles)) {
+      setRecentAppointments(data.recent?.content ?? []);
+    }
+
+    if (canSeeReports(roles)) {
+      setTopDoctors((data.productivity ?? []).slice(0, 5));
+    }
+
+    setLastUpdated(new Date().toLocaleTimeString('es-CO'));
+    setLoading(false);
   }, [roles]);
 
   return {

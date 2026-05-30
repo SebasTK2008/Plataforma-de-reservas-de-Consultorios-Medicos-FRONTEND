@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Search, Calendar, ChevronLeft, ChevronRight,
   AlertCircle, X, Loader, CheckCircle,
@@ -11,6 +11,7 @@ import { getOffices } from '../api/officesApi';
 import { getAppointmentTypes } from '../api/appointmentTypesApi';
 import api from '../api/AxiosConfig';
 import './AppointmentsPage.css';
+import { useAuth } from '../hooks/useAuth';
 
 
 // ════════════════════════════════════════════════════════════════
@@ -715,13 +716,22 @@ function LoadingSkeleton() {
 // PÁGINA PRINCIPAL
 // ════════════════════════════════════════════════════════════════
 function AppointmentsPage() {
+  const { user } = useAuth();
+  const roles = useMemo(() => {
+      if (!user?.roles) return [];
+      return Array.isArray(user.roles) ? user.roles : [user.roles];
+    }, [user]);
+  console.log('user:', user);
+  console.log('roles:', roles);
+  console.log('isDoctor:', roles.includes('ROLE_DOCTOR'));
+
   const {
     appointments, loading, error,
     totalPages, totalElements,
     currentPage, setCurrentPage,
     filters, updateFilters,
-    doCreate, doConfirm, doCancel, doComplete, doNoShow,
-  } = useAppointments();
+    doCreate, doConfirm, doCancel, doComplete, doNoShow,isDoctor,
+  }  = useAppointments(roles);
 
   const [createOpen,          setCreateOpen]          = useState(false);
   const [cancelAppointment,   setCancelAppointment]   = useState(null);
@@ -770,9 +780,11 @@ function AppointmentsPage() {
                 : `${totalElements} cita${totalElements !== 1 ? 's' : ''} encontrada${totalElements !== 1 ? 's' : ''}`}
             </p>
           </div>
+          {!isDoctor && (
           <button className="btn btn--primary" onClick={() => setCreateOpen(true)}>
-            <Plus size={18} /> Nueva Cita
+          <Plus size={18} /> Nueva Cita
           </button>
+          )}
         </div>
 
         <div className="filters-bar">
@@ -810,7 +822,7 @@ function AppointmentsPage() {
                   ? `No se encontraron citas con estado "${filters.status}".`
                   : 'Comienza creando la primera cita del sistema.'}
               </p>
-              {!filters.status && (
+              {!filters.status && !isDoctor && (
                 <button className="btn btn--primary" onClick={() => setCreateOpen(true)}>
                   <Plus size={16} /> Nueva Cita
                 </button>
