@@ -223,7 +223,7 @@ function LoginPage() {
             {/* Se deshabilita mientras carga para evitar doble envío */}
             <button
               type="submit"
-              className="login__submit-btn"
+              className="btn btn--primary login__submit-btn"
               disabled={isLoading}
             >
               {/* Mostramos spinner o texto según el estado */}

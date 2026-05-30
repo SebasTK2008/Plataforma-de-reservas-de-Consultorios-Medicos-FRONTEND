@@ -36,51 +36,6 @@
 }
 
 
-/* ── Botones globales (reutilizables) ────────────────── */
-/* Definimos estilos de botones aquí pero deberían ir en
-   un archivo global. Por ahora los ponemos aquí para simplicidad. */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-family: var(--font-body);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
-
-.btn--primary {
-  background-color: var(--color-primary);
-  color: white;
-}
-.btn--primary:hover { background-color: var(--color-primary-dark); }
-
-.btn--secondary {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1.5px solid var(--color-border);
-}
-.btn--secondary:hover { background-color: var(--color-primary-light); }
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Animación de rotación para íconos de carga */
-.spin {
-  animation: rotar 1s linear infinite;
-}
-@keyframes rotar {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-
 /* ── Mensaje de error ───────────────────────────────── */
 .dashboard__error {
   display: flex;
@@ -172,11 +127,6 @@
   margin: 2px 0;
 }
 
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 
 /* ── Sección inferior con dos columnas ──────────────── */
 .dashboard__bottom {
@@ -227,38 +177,6 @@
 
 
 /* ── Tabla de datos ──────────────────────────────────── */
-.table-wrapper {
-  overflow-x: auto;  /* Scroll horizontal si la tabla es muy ancha */
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;  /* Une los bordes de las celdas */
-  font-size: var(--text-sm);
-}
-
-.data-table th {
-  padding: var(--spacing-sm) var(--spacing-md);
-  text-align: left;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  background-color: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.data-table td {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-}
-
-.data-table tr:last-child td {
-  border-bottom: none;  /* No borde en la última fila */
-}
-
 .data-table tr:hover td {
   background-color: var(--color-primary-light);  /* Resalta al hacer hover */
 }
@@ -290,37 +208,6 @@
 }
 
 
-/* ── Estado vacío ───────────────────────────────────── */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-2xl) var(--spacing-lg);
-  color: var(--color-text-secondary);
-  gap: var(--spacing-sm);
-}
-
-.empty-state p {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-
-/* ── Badges de estado ───────────────────────────────── */
-.badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-}
-
-.badge--blue   { background: #eff6ff; color: #1d4ed8; }
-.badge--green  { background: #f0fdf4; color: #15803d; }
-.badge--gray   { background: #f3f4f6; color: #374151; }
-.badge--red    { background: #fef2f2; color: #b91c1c; }
-.badge--orange { background: #fff7ed; color: #c2410c; }
 
 
 /* ── Ranking de doctores ────────────────────────────── */

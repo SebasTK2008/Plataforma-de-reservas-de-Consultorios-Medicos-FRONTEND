@@ -48,7 +48,12 @@ function translateError(message) {
 // ════════════════════════════════════════════════════════════════
 function localDateTimeMin() {
   const now = new Date(Date.now() + 60000);
+
+  // Sumar 5 horas
+  now.setHours(now.getHours() + 5);
+
   const pad = (n) => String(n).padStart(2, '0');
+
   return (
     `${now.getFullYear()}-` +
     `${pad(now.getMonth() + 1)}-` +

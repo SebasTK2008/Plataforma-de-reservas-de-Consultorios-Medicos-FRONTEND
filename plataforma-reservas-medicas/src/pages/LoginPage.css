@@ -198,74 +198,6 @@
 }
 
 /* --- Grupo de campo (label + input) --- */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);   /* Espacio pequeño entre label e input */
-}
-
-.form-label {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  font-family: var(--font-body);
-}
-
-.form-input {
-  height: 48px;
-  padding: 0 var(--spacing-md);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--text-base);
-  font-family: var(--font-body);
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  width: 100%;
-}
-
-/* Cuando el input está activo (el usuario hace clic) */
-.form-input:focus {
-  border-color: var(--color-primary);
-  /* Anillo azul sutil alrededor del input activo */
-  box-shadow: 0 0 0 3px var(--color-primary-light);
-}
-
-.form-input::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 0.7;
-}
-
-/* --- Input de contraseña necesita espacio para el botón del ojo --- */
-.form-input-wrapper {
-  position: relative;   /* Para posicionar el botón dentro */
-}
-
-/* El padding derecho evita que el texto tape el botón del ojo */
-.form-input--password {
-  padding-right: 48px;
-}
-
-.form-password-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);  /* Centrado vertical perfecto */
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  transition: color 0.2s ease;
-}
-
-.form-password-toggle:hover {
-  color: var(--color-primary);
-}
 
 /* --- Botón de envío --- */
 .login__submit-btn {
@@ -332,15 +264,6 @@
 
 /* ── Spinner animado ── */
 /* La clase .spin se aplica al ícono Loader cuando isLoading=true */
-.spin {
-  animation: girar 1s linear infinite;
-}
-
-/* Definición de la animación de rotación */
-@keyframes girar {
-  from { transform: rotate(0deg);   }
-  to   { transform: rotate(360deg); }
-}
 
 /* ── Botón con spinner — alinear ícono y texto ── */
 .login__submit-btn {
