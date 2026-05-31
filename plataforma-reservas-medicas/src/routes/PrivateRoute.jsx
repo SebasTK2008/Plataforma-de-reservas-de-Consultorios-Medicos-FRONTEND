@@ -3,7 +3,7 @@
 // Si el usuario SÍ está autenticado → muestra la página pedida
 
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 function PrivateRoute({ children }) {
 
