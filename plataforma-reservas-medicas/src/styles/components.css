@@ -499,11 +499,17 @@
   font-weight: 600;
   color: var(--color-text-primary);
 }
-.label-optional {
+.label-optional,
+.label-required {
   font-size: var(--text-xs);
   font-weight: 400;
-  color: var(--color-text-secondary);
   margin-left: 6px;
+}
+.label-optional {
+  color: var(--color-text-secondary);
+}
+.label-required {
+  color: var(--color-error);
 }
 
 /* Input y select base */

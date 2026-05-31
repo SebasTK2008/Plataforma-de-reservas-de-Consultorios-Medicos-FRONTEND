@@ -333,6 +333,7 @@ function DoctorModal({ isOpen, onClose, onSubmit, doctor, specialties, loadingSp
     if (!isEditing) {
       if (!form.licenseNumber.trim())  return setError('El número de licencia es requerido.');
       if (!form.documentNumber.trim()) return setError('El número de documento es requerido.');
+      if (schedules.length === 0) return setError('Debes agregar al menos un horario de atención.');
     }
     if (schedules.length > 0) {
       const err = validateSchedules();
@@ -481,7 +482,7 @@ function DoctorModal({ isOpen, onClose, onSubmit, doctor, specialties, loadingSp
               <div className="schedule-section__header">
                 <p className="form-section-title">
                   <Clock size={16} /> Horarios de Atención
-                  <span className="label-optional"> (opcional)</span>
+                  <span className="label-required"> (obligatorio)</span>
                 </p>
                 <button type="button" className="btn btn--ghost btn--sm"
                   onClick={addSchedule} disabled={saving}>
@@ -491,7 +492,7 @@ function DoctorModal({ isOpen, onClose, onSubmit, doctor, specialties, loadingSp
 
               {schedules.length === 0 && (
                 <p className="schedule-empty-hint">
-                  Puedes agregar los horarios ahora o hacerlo más tarde.
+                  Debes agregar al menos un horario para crear el doctor.
                 </p>
               )}
 
