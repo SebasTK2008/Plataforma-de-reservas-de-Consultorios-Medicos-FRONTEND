@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { useSpecialties } from '../Hooks/useSpecialties';
+import { useAuth } from '../hooks/useAuth';
 import './SpecialtiesPage.css';
 
 
@@ -183,6 +184,9 @@ function CardSkeleton() {
 
 function SpecialtiesPage() {
 
+  const { user } = useAuth();
+  const isStaff = user?.roles?.includes('ROLE_STAFF');
+
   const { specialties, loading, error, addSpecialty } = useSpecialties();
 
   const [modalOpen,   setModalOpen]   = useState(false);
@@ -211,10 +215,12 @@ function SpecialtiesPage() {
               }
             </p>
           </div>
-          <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
-            <Plus size={18} />
-            Nueva Especialidad
-          </button>
+          {!isStaff && (
+            <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
+              <Plus size={18} />
+              Nueva Especialidad
+            </button>
+          )}
         </div>
 
         {!loading && specialties.length > 0 && (
@@ -259,7 +265,7 @@ function SpecialtiesPage() {
                 ? 'Intenta con otro término de búsqueda.'
                 : 'Crea la primera especialidad del sistema.'}
             </p>
-            {!searchQuery && (
+            {!searchQuery && !isStaff && (
               <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
                 <Plus size={16} />
                 Crear primera especialidad

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { useAppointmentTypes } from '../hooks/useAppointmentTypes';
+import { useAuth } from '../hooks/useAuth';
 import './AppointmentTypesPage.css';
 
 
@@ -223,6 +224,9 @@ function LoadingSkeleton() {
 
 function AppointmentTypesPage() {
 
+  const { user } = useAuth();
+  const isStaff = user?.roles?.includes('ROLE_STAFF');
+
   const {
     appointmentTypes,
     loading,
@@ -258,9 +262,11 @@ function AppointmentTypesPage() {
               }
             </p>
           </div>
-          <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
-            <Plus size={18} /> Nuevo Tipo de Cita
-          </button>
+          {!isStaff && (
+            <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
+              <Plus size={18} /> Nuevo Tipo de Cita
+            </button>
+          )}
         </div>
 
         <div className="search-bar">
@@ -303,7 +309,7 @@ function AppointmentTypesPage() {
                   ? 'Intenta con otro término de búsqueda.'
                   : 'Los tipos de cita definen la duración de cada consulta.'}
               </p>
-              {!searchQuery && (
+              {!searchQuery && !isStaff && (
                 <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
                   <Plus size={16} /> Crear primer tipo
                 </button>

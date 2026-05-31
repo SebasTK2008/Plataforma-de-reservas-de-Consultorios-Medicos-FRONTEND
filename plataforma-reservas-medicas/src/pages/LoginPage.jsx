@@ -63,8 +63,8 @@ function LoginPage() {
       // response.accessToken tiene el JWT que devolvió el backend
       login(response.accessToken);
 
-      // Redirigimos al dashboard
-      navigate('/dashboard');
+      // Redirigimos a la ruta según el rol del usuario
+      navigate('/');
 
     } catch (error) {
       // El backend respondió con error, o no hubo conexión

@@ -36,6 +36,7 @@ import {
 import MainLayout from '../components/layout/MainLayout';
 import { useDoctors } from '../hooks/useDoctors';
 import { useSpecialties } from '../hooks/useSpecialties';
+import { useAuth } from '../hooks/useAuth';
 import { getAvailableSlots } from '../api/availabilityApi';
 import api from '../api/AxiosConfig';
 import './DoctorsPage.css';
@@ -574,6 +575,9 @@ function LoadingSkeleton() {
 // ════════════════════════════════════════════════════════════════
 function DoctorsPage() {
 
+  const { user } = useAuth();
+  const isStaff = user?.roles?.includes('ROLE_STAFF');
+
   const {
     doctors, loading, error,
     totalPages, totalElements,
@@ -624,9 +628,11 @@ function DoctorsPage() {
               }
             </p>
           </div>
-          <button className="btn btn--primary" onClick={openCreate}>
-            <Plus size={18} /> Nuevo Doctor
-          </button>
+          {!isStaff && (
+            <button className="btn btn--primary" onClick={openCreate}>
+              <Plus size={18} /> Nuevo Doctor
+            </button>
+          )}
         </div>
 
         <div className="doctors-filters">
@@ -669,7 +675,7 @@ function DoctorsPage() {
               <div className="empty-state__icon"><UserRound size={40} /></div>
               <h3>{searchQuery ? `Sin resultados para "${searchQuery}"` : 'No hay doctores registrados'}</h3>
               <p>{searchQuery ? 'Intenta con otro nombre, email o especialidad.' : 'Comienza registrando el primer doctor.'}</p>
-              {!searchQuery && (
+              {!searchQuery && !isStaff && (
                 <button className="btn btn--primary" onClick={openCreate}>
                   <Plus size={16} /> Registrar primer doctor
                 </button>

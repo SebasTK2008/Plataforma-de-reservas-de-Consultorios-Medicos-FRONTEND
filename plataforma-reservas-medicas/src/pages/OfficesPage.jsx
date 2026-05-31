@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { useOffices } from '../hooks/useOffices';
+import { useAuth } from '../hooks/useAuth';
 import './OfficesPage.css';
 
 
@@ -229,6 +230,9 @@ function LoadingSkeleton() {
 // ── Página principal ──────────────────────────────────────────
 function OfficesPage() {
 
+  const { user } = useAuth();
+  const isStaff = user?.roles?.includes('ROLE_STAFF');
+
   const { offices, loading, error, addOffice, editOffice } = useOffices();
 
   const [modalOpen,      setModalOpen]      = useState(false);
@@ -267,9 +271,11 @@ function OfficesPage() {
               {loading ? 'Cargando...' : `${offices.length} consultorio${offices.length !== 1 ? 's' : ''} registrado${offices.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <button className="btn btn--primary" onClick={openCreate}>
-            <Plus size={18} /> Nuevo Consultorio
-          </button>
+          {!isStaff && (
+            <button className="btn btn--primary" onClick={openCreate}>
+              <Plus size={18} /> Nuevo Consultorio
+            </button>
+          )}
         </div>
 
         <div className="filters-bar">
@@ -307,7 +313,7 @@ function OfficesPage() {
               <div className="empty-state__icon"><Building2 size={40} /></div>
               <h3>{searchQuery || statusFilter ? 'Sin resultados' : 'No hay consultorios registrados'}</h3>
               <p>{searchQuery || statusFilter ? 'Intenta con otros filtros.' : 'Comienza registrando el primer consultorio.'}</p>
-              {!searchQuery && !statusFilter && (
+              {!searchQuery && !statusFilter && !isStaff && (
                 <button className="btn btn--primary" onClick={openCreate}>
                   <Plus size={16} /> Registrar consultorio
                 </button>
