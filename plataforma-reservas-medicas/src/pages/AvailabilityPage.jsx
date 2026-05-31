@@ -143,7 +143,11 @@ function AvailabilityPage() {
   } = useAvailability();
 
   // Fecha mínima: hoy
-  const todayStr = new Date().toISOString().slice(0, 10);
+  function toLocalDateStr(date) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+  const todayStr = toLocalDateStr(new Date());
 
   // Validación client-side: doctor y fecha son obligatorios para buscar
   const canSearch = selectedDoctor && selectedDate && !loading;

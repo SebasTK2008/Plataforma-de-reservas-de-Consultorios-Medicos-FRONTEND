@@ -48,13 +48,8 @@ function translateError(message) {
 // HELPER: hora mínima en hora local (fix UTC bug)
 // ════════════════════════════════════════════════════════════════
 function localDateTimeMin() {
-  const now = new Date(Date.now() + 60000);
-
-  // Sumar 5 horas
-  now.setHours(now.getHours() + 5);
-
+  const now = new Date(Date.now() + 60000); // +1 minuto de margen
   const pad = (n) => String(n).padStart(2, '0');
-
   return (
     `${now.getFullYear()}-` +
     `${pad(now.getMonth() + 1)}-` +

@@ -91,7 +91,11 @@ function AvailabilityModal({ isOpen, onClose, doctor }) {
 
   // Fecha seleccionada — inicializamos con hoy en formato YYYY-MM-DD
   // que es lo que espera el input type="date"
-  const todayStr = new Date().toISOString().slice(0, 10);
+  function toLocalDateStr(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+  const todayStr = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
   // Estado de la carga de slots

@@ -38,7 +38,19 @@ function PatientStatusBadge({ status }) {
 function PatientModal({ isOpen, onClose, onSubmit, patient }) {
 
   const isEditing = patient !== null && patient !== undefined;
-
+  // AGREGAR esto — igual que en DoctorModal
+    useEffect(() => {
+      setForm({
+        fullName:       patient?.fullName       ?? '',
+        email:          patient?.email          ?? '',
+        phoneNumber:    patient?.phoneNumber    ?? '',
+        documentNumber: patient?.documentNumber ?? '',
+        studentCode:    patient?.studentCode    ?? '',
+        status:         patient?.status         ?? 'ACTIVE',
+      });
+      setError(null);
+      setSaving(false); // ← esto es el fix del bug
+    }, [patient, isOpen]); // ← se ejecuta cada vez que cambia el paciente o se abre el modal
   // Pre-llenamos el formulario con los datos del paciente si estamos editando
   const [form, setForm] = useState({
     fullName:       patient?.fullName       ?? '',

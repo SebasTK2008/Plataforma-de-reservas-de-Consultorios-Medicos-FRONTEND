@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboardData, canSeeOperations, canSeeReports } from '../hooks/useDashboardData';
-import StatusBadge from '../common/StatusBadge';
-import StatCard from '../common/StatCard';
-import EmptyState from '../common/EmptyState';
+import StatusBadge from '../components/common/StatusBadge';
+import StatCard from '../components/common/StatCard';
+import EmptyState from '../components/common/EmptyState';
 import './DashboardPage.css';
 
 function formatDate(dateString) {

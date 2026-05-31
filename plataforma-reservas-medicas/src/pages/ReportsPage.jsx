@@ -62,7 +62,9 @@ function formatMinutes(minutes) {
 
 // Obtiene hoy en formato YYYY-MM-DD para el input type="date"
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 // Obtiene el primer día del mes actual en formato YYYY-MM-DD
