@@ -80,12 +80,7 @@ export async function updateOffice(id, officeData, includeStatus = false) {
   if (officeData.location    !== undefined) payload.location    = officeData.location;
   if (officeData.description !== undefined) payload.description = officeData.description;
   if (officeData.roomNumber  !== undefined) payload.roomNumber  = officeData.roomNumber;
-
-  // Solo incluimos status cuando el backend esté listo para recibirlo.
-  // Cambia includeStatus a true en useOffices.jsx cuando actualices el DTO.
-  if (includeStatus && officeData.status !== undefined) {
-    payload.status = officeData.status;
-  }
+  if (officeData.status !== undefined) payload.status = officeData.status;
 
   const response = await api.patch(`/api/offices/${id}`, payload);
   return response.data;

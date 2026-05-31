@@ -80,7 +80,7 @@ function LoginPage() {
         } else if (status === 400) {
           setErrorMessage('Datos inválidos. Verifica la información ingresada.');
         } else {
-          setErrorMessage('Error en el servidor. Intenta más tarde.');
+          setErrorMessage('Usuario no encontrado o error en el servidor. Intenta más tarde.');
         }
 
       } else if (error.request) {
