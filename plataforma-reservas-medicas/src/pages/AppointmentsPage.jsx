@@ -308,9 +308,15 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
       }
     };
 
-    loadDropdowns();
+    setDropdowns({
+      patients: [], doctors: [], offices: [], appointmentTypes: [],
+      loading: true, error: null,
+    });
     setForm({ patientId: '', doctorId: '', officeId: '', appointmentTypeId: '', startAt: '' });
     setError(null);
+    setSaving(false);
+
+    loadDropdowns();
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -339,7 +345,7 @@ function CreateAppointmentModal({ isOpen, onClose, onSubmit }) {
       appointmentTypeId: form.appointmentTypeId,
       // Fix zona horaria: convierte hora local → ISO UTC para que el backend
       // valide correctamente (el backend trabaja en UTC)
-      startAt: new Date(form.startAt).toISOString(),
+      startAt: form.startAt,
     });
 
     if (result.success) {

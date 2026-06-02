@@ -17,14 +17,3 @@ export async function loginRequest(credentials) {
   return response.data;
 }
 
-// ─────────────────────────────────────────
-// REGISTRO (solo para admins)
-// ─────────────────────────────────────────
-
-// Llama a POST /api/auth/register
-// Recibe: { documentNumber, password, roles }
-// Devuelve: { accessToken, tokenType, expiresInSeconds }
-export async function registerRequest(userData) {
-  const response = await api.post('/api/auth/register', userData);
-  return response.data;
-}
